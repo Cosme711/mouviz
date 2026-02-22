@@ -1,15 +1,16 @@
 import { eq, and, asc, inArray } from 'drizzle-orm'
 import { films, favoriteFilms, userFilmInteractions } from '../../database/schema'
 
-const CURRENT_USER_ID = 1
-
-export default defineEventHandler(async (_event) => {
+export default defineEventHandler(async (event) => {
+  const session = await getUserSession(event)
+  if (!session.user) throw createError({ statusCode: 401, message: 'Non authentifié' })
+  const userId = session.user.id
   const db = useDB()
 
   const favRows = db
     .select({ filmId: favoriteFilms.filmId, position: favoriteFilms.position })
     .from(favoriteFilms)
-    .where(eq(favoriteFilms.userId, CURRENT_USER_ID))
+    .where(eq(favoriteFilms.userId, userId))
     .orderBy(asc(favoriteFilms.position))
     .all()
 
@@ -23,7 +24,7 @@ export default defineEventHandler(async (_event) => {
     .select()
     .from(userFilmInteractions)
     .where(and(
-      eq(userFilmInteractions.userId, CURRENT_USER_ID),
+      eq(userFilmInteractions.userId, userId),
       inArray(userFilmInteractions.filmId, filmIds),
     ))
     .all()

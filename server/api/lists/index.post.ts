@@ -1,8 +1,9 @@
 import { lists } from '../../database/schema'
 
-const CURRENT_USER_ID = 1
-
 export default defineEventHandler(async (event) => {
+  const session = await getUserSession(event)
+  if (!session.user) throw createError({ statusCode: 401, message: 'Non authentifié' })
+  const userId = session.user.id
   const db = useDB()
   const body = await readBody(event)
 
@@ -13,7 +14,7 @@ export default defineEventHandler(async (event) => {
   const [list] = db
     .insert(lists)
     .values({
-      userId: CURRENT_USER_ID,
+      userId: userId,
       title: String(body.title),
       description: String(body.description ?? ''),
       isPublic: body.isPublic !== false,

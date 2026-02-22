@@ -56,6 +56,9 @@ export const users = sqliteTable('users', {
   displayName: text('display_name').notNull(),
   avatar: text('avatar').notNull().default(''),
   bio: text('bio').notNull().default(''),
+  email: text('email').unique(),
+  googleId: text('google_id').unique(),
+  createdAt: text('created_at').notNull().default(new Date().toISOString()),
 })
 
 export const userFollows = sqliteTable('user_follows', {

@@ -1,15 +1,16 @@
 import { eq, desc, inArray } from 'drizzle-orm'
 import { diaryEntries, films } from '../../database/schema'
 
-const CURRENT_USER_ID = 1
-
-export default defineEventHandler(async (_event) => {
+export default defineEventHandler(async (event) => {
+  const session = await getUserSession(event)
+  if (!session.user) throw createError({ statusCode: 401, message: 'Non authentifié' })
+  const userId = session.user.id
   const db = useDB()
 
   const entries = db
     .select()
     .from(diaryEntries)
-    .where(eq(diaryEntries.userId, CURRENT_USER_ID))
+    .where(eq(diaryEntries.userId, userId))
     .orderBy(desc(diaryEntries.watchedAt))
     .all()
 

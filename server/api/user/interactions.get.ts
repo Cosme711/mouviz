@@ -1,15 +1,16 @@
 import { eq } from 'drizzle-orm'
 import { userFilmInteractions } from '../../database/schema'
 
-const CURRENT_USER_ID = 1
-
-export default defineEventHandler(async (_event) => {
+export default defineEventHandler(async (event) => {
+  const session = await getUserSession(event)
+  if (!session.user) throw createError({ statusCode: 401, message: 'Non authentifié' })
+  const userId = session.user.id
   const db = useDB()
 
   const interactions = db
     .select()
     .from(userFilmInteractions)
-    .where(eq(userFilmInteractions.userId, CURRENT_USER_ID))
+    .where(eq(userFilmInteractions.userId, userId))
     .all()
 
   return { interactions }

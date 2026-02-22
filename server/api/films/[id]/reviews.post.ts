@@ -1,9 +1,10 @@
 import { eq, and } from 'drizzle-orm'
 import { reviews, activity, userFilmInteractions } from '../../../database/schema'
 
-const CURRENT_USER_ID = 1
-
 export default defineEventHandler(async (event) => {
+  const session = await getUserSession(event)
+  if (!session.user) throw createError({ statusCode: 401, message: 'Non authentifié' })
+  const userId = session.user.id
   const db = useDB()
   const filmId = Number(getRouterParam(event, 'id'))
   const body = await readBody(event)
@@ -18,7 +19,7 @@ export default defineEventHandler(async (event) => {
     .insert(reviews)
     .values({
       filmId,
-      userId: CURRENT_USER_ID,
+      userId: userId,
       rating: Number(body.rating),
       text: String(body.text),
       likes: 0,
@@ -29,7 +30,7 @@ export default defineEventHandler(async (event) => {
 
   db.insert(activity)
     .values({
-      userId: CURRENT_USER_ID,
+      userId: userId,
       filmId,
       type: 'reviewed',
       rating: Number(body.rating),
@@ -41,7 +42,7 @@ export default defineEventHandler(async (event) => {
   // Mark as watched when reviewing
   db.insert(userFilmInteractions)
     .values({
-      userId: CURRENT_USER_ID,
+      userId: userId,
       filmId,
       watched: true,
       liked: false,

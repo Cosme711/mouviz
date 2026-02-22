@@ -1,9 +1,10 @@
 import { eq, and } from 'drizzle-orm'
 import { userFilmInteractions, activity } from '../../database/schema'
 
-const CURRENT_USER_ID = 1
-
 export default defineEventHandler(async (event) => {
+  const session = await getUserSession(event)
+  if (!session.user) throw createError({ statusCode: 401, message: 'Non authentifié' })
+  const userId = session.user.id
   const db = useDB()
   const body = await readBody(event)
   const filmId = Number(body.filmId)
@@ -17,7 +18,7 @@ export default defineEventHandler(async (event) => {
     .select()
     .from(userFilmInteractions)
     .where(and(
-      eq(userFilmInteractions.userId, CURRENT_USER_ID),
+      eq(userFilmInteractions.userId, userId),
       eq(userFilmInteractions.filmId, filmId),
     ))
     .get()
@@ -30,7 +31,7 @@ export default defineEventHandler(async (event) => {
 
   db.insert(userFilmInteractions)
     .values({
-      userId: CURRENT_USER_ID,
+      userId: userId,
       filmId,
       watched: newWatched,
       liked: newLiked,
@@ -50,7 +51,7 @@ export default defineEventHandler(async (event) => {
   if ((field === 'watched' || field === 'liked') && newValue) {
     db.insert(activity)
       .values({
-        userId: CURRENT_USER_ID,
+        userId: userId,
         filmId,
         type: field,
         createdAt: new Date().toISOString(),
