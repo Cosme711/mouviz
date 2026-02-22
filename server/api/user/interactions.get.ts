@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const userId = session.user.id
   const db = useDB()
 
-  const interactions = db
+  const interactions = await db
     .select()
     .from(userFilmInteractions)
     .where(eq(userFilmInteractions.userId, userId))

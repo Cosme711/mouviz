@@ -1,12 +1,11 @@
 import { config } from 'dotenv'
 config()
 
-import Database from 'better-sqlite3'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
+import { createClient } from '@libsql/client'
+import { drizzle } from 'drizzle-orm/libsql'
+import { migrate } from 'drizzle-orm/libsql/migrator'
 import { eq, inArray } from 'drizzle-orm'
 import { join, dirname } from 'path'
-import { mkdirSync } from 'fs'
 import { fileURLToPath } from 'url'
 import * as schema from '../server/database/schema'
 
@@ -15,15 +14,14 @@ const ROOT = join(__dirname, '..')
 
 // ─── DB Setup ───────────────────────────────────────────────────────────────
 
-const dbDir = join(ROOT, 'db')
-mkdirSync(dbDir, { recursive: true })
-const sqlite = new Database(join(dbDir, 'mouviz.db'))
-sqlite.pragma('journal_mode = WAL')
-sqlite.pragma('foreign_keys = ON')
-const db = drizzle(sqlite, { schema })
+const client = createClient({
+  url: process.env.TURSO_DATABASE_URL!,
+  authToken: process.env.TURSO_AUTH_TOKEN,
+})
+const db = drizzle(client, { schema })
 
 // Run pending migrations
-migrate(db, { migrationsFolder: join(ROOT, 'server/database/migrations') })
+await migrate(db, { migrationsFolder: join(ROOT, 'server/database/migrations') })
 console.log('✓ Migrations applied')
 
 // ─── TMDB Helpers ────────────────────────────────────────────────────────────
@@ -94,7 +92,7 @@ interface TmdbPerson {
 console.log('\n── Step 1: Genres')
 const { genres: tmdbGenres } = await tmdbFetch<{ genres: TmdbGenre[] }>('/genre/movie/list?language=fr-FR')
 for (const g of tmdbGenres) {
-  db.insert(schema.genres).values({ id: g.id, name: g.name }).onConflictDoNothing().run()
+  await db.insert(schema.genres).values({ id: g.id, name: g.name }).onConflictDoNothing().run()
 }
 console.log(`✓ ${tmdbGenres.length} genres inserted`)
 
@@ -113,7 +111,7 @@ console.log(`✓ ${popularFilms.length} films fetched`)
 // Insert basic film data first (without runtime/overview)
 for (const f of popularFilms) {
   const year = f.release_date ? parseInt(f.release_date.split('-')[0]!) : 0
-  db.insert(schema.films)
+  await db.insert(schema.films)
     .values({
       id: f.id,
       title: f.title,
@@ -142,7 +140,7 @@ const filmDetails = await batchRequests(
 for (const detail of filmDetails) {
   if (!detail) continue
   const year = detail.release_date ? parseInt(detail.release_date.split('-')[0]!) : 0
-  db.update(schema.films)
+  await db.update(schema.films)
     .set({
       year,
       duration: detail.runtime ?? 0,
@@ -157,8 +155,8 @@ for (const detail of filmDetails) {
 
   // Insert genres
   for (const g of detail.genres) {
-    db.insert(schema.genres).values({ id: g.id, name: g.name }).onConflictDoNothing().run()
-    db.insert(schema.filmGenres)
+    await db.insert(schema.genres).values({ id: g.id, name: g.name }).onConflictDoNothing().run()
+    await db.insert(schema.filmGenres)
       .values({ filmId: detail.id, genreId: g.id })
       .onConflictDoNothing()
       .run()
@@ -185,7 +183,7 @@ for (let i = 0; i < filmIds.length; i++) {
   const director = credits.crew.find(c => c.job === 'Director')
   if (director) {
     // Insert person placeholder
-    db.insert(schema.persons)
+    await db.insert(schema.persons)
       .values({
         id: director.id,
         name: director.name,
@@ -195,7 +193,7 @@ for (let i = 0; i < filmIds.length; i++) {
       .onConflictDoNothing()
       .run()
 
-    db.insert(schema.filmCredits)
+    await db.insert(schema.filmCredits)
       .values({
         filmId,
         personId: director.id,
@@ -211,7 +209,7 @@ for (let i = 0; i < filmIds.length; i++) {
   // Top 10 actors
   const topActors = credits.cast.slice(0, 10)
   for (const actor of topActors) {
-    db.insert(schema.persons)
+    await db.insert(schema.persons)
       .values({
         id: actor.id,
         name: actor.name,
@@ -221,7 +219,7 @@ for (let i = 0; i < filmIds.length; i++) {
       .onConflictDoNothing()
       .run()
 
-    db.insert(schema.filmCredits)
+    await db.insert(schema.filmCredits)
       .values({
         filmId,
         personId: actor.id,
@@ -257,7 +255,7 @@ let personUpdateCount = 0
 for (const person of personDetails) {
   if (!person) continue
   const birthYear = person.birthday ? parseInt(person.birthday.split('-')[0]!) : null
-  db.update(schema.persons)
+  await db.update(schema.persons)
     .set({
       biography: person.biography || '',
       birthYear: isNaN(birthYear!) ? null : birthYear,
@@ -291,7 +289,7 @@ const similarResults = await batchRequests(
 for (const { filmId, similar } of similarResults) {
   for (const s of similar.slice(0, 6)) {
     if (dbFilmIds.has(s.id)) {
-      db.insert(schema.similarFilms)
+      await db.insert(schema.similarFilms)
         .values({ filmId, similarFilmId: s.id })
         .onConflictDoNothing()
         .run()
@@ -306,7 +304,7 @@ console.log(`✓ ${similarCount} similar film links inserted`)
 console.log('\n── Step 7: Seed user data')
 
 // Create currentuser
-const [currentUser] = db
+const [currentUser] = await db
   .insert(schema.users)
   .values({
     username: 'currentuser',
@@ -326,23 +324,23 @@ const communityUsers = [
   { username: 'arthouse_fan', displayName: 'Arthouse Fan' },
 ]
 for (const u of communityUsers) {
-  db.insert(schema.users).values({ ...u, avatar: '', bio: '' }).onConflictDoNothing().run()
+  await db.insert(schema.users).values({ ...u, avatar: '', bio: '' }).onConflictDoNothing().run()
 }
 
 // Get userId (handle case where user already existed)
 let userId = currentUser?.id
 if (!userId) {
-  const existingUser = db.select().from(schema.users).where(eq(schema.users.username, 'currentuser')).get()
+  const existingUser = await db.select().from(schema.users).where(eq(schema.users.username, 'currentuser')).get()
   userId = existingUser!.id
 }
 
-const allFilmsInDb = db.select({ id: schema.films.id, avgRating: schema.films.avgRating }).from(schema.films).all()
+const allFilmsInDb = await db.select({ id: schema.films.id, avgRating: schema.films.avgRating }).from(schema.films).all()
 const sortedByRating = [...allFilmsInDb].sort((a, b) => b.avgRating - a.avgRating)
 
 // Favorite films (top 4 by rating)
 const favFilms = sortedByRating.slice(0, 4)
 for (let i = 0; i < favFilms.length; i++) {
-  db.insert(schema.favoriteFilms)
+  await db.insert(schema.favoriteFilms)
     .values({ userId, filmId: favFilms[i]!.id, position: i })
     .onConflictDoNothing()
     .run()
@@ -352,7 +350,7 @@ for (let i = 0; i < favFilms.length; i++) {
 const watchedFilms = sortedByRating.slice(0, 20)
 for (const film of watchedFilms) {
   const liked = film.avgRating >= 4.0
-  db.insert(schema.userFilmInteractions)
+  await db.insert(schema.userFilmInteractions)
     .values({
       userId,
       filmId: film.id,
@@ -368,7 +366,7 @@ for (const film of watchedFilms) {
 // Watchlist (films 20-26 by rating)
 const watchlistFilms = sortedByRating.slice(20, 26)
 for (const film of watchlistFilms) {
-  db.insert(schema.userFilmInteractions)
+  await db.insert(schema.userFilmInteractions)
     .values({
       userId,
       filmId: film.id,
@@ -388,7 +386,7 @@ const diaryDates = [
 ]
 for (let i = 0; i < diaryFilms.length; i++) {
   const film = diaryFilms[i]!
-  db.insert(schema.diaryEntries)
+  await db.insert(schema.diaryEntries)
     .values({
       userId,
       filmId: film.id,
@@ -404,7 +402,7 @@ for (let i = 0; i < diaryFilms.length; i++) {
 // Activity for currentuser
 for (let i = 0; i < Math.min(6, watchedFilms.length); i++) {
   const film = watchedFilms[i]!
-  db.insert(schema.activity)
+  await db.insert(schema.activity)
     .values({
       userId,
       filmId: film.id,
@@ -417,7 +415,7 @@ for (let i = 0; i < Math.min(6, watchedFilms.length); i++) {
 }
 
 // Activity for community users (for home feed)
-const communityUserRows = db
+const communityUserRows = await db
   .select()
   .from(schema.users)
   .where(inArray(schema.users.username, communityUsers.map(u => u.username)))
@@ -430,7 +428,7 @@ const feedFilms = sortedByRating.slice(5, 10)
 for (let i = 0; i < communityUserRows.length; i++) {
   const user = communityUserRows[i]!
   const film = feedFilms[i % feedFilms.length]!
-  db.insert(schema.activity)
+  await db.insert(schema.activity)
     .values({
       userId: user.id,
       filmId: film.id,
@@ -465,7 +463,7 @@ const listData = [
 ]
 
 for (const listDef of listData) {
-  const [list] = db
+  const [list] = await db
     .insert(schema.lists)
     .values({
       userId,
@@ -479,7 +477,7 @@ for (const listDef of listData) {
 
   if (!list) continue
   for (let pos = 0; pos < listDef.films.length; pos++) {
-    db.insert(schema.listFilms)
+    await db.insert(schema.listFilms)
       .values({ listId: list.id, filmId: listDef.films[pos]!, position: pos })
       .onConflictDoNothing()
       .run()
@@ -489,7 +487,7 @@ for (const listDef of listData) {
 // Community user lists
 for (let ci = 0; ci < communityUserRows.length; ci++) {
   const user = communityUserRows[ci]!
-  const [list] = db
+  const [list] = await db
     .insert(schema.lists)
     .values({
       userId: user.id,
@@ -504,7 +502,7 @@ for (let ci = 0; ci < communityUserRows.length; ci++) {
   if (!list) continue
   const listFilmSlice = sortedByRating.slice(10 + ci * 4, 10 + ci * 4 + 4).map(f => f.id)
   for (let pos = 0; pos < listFilmSlice.length; pos++) {
-    db.insert(schema.listFilms)
+    await db.insert(schema.listFilms)
       .values({ listId: list.id, filmId: listFilmSlice[pos]!, position: pos })
       .onConflictDoNothing()
       .run()

@@ -4,7 +4,7 @@ import { lists, users, listFilms, films } from '../../database/schema'
 export default defineEventHandler(async (_event) => {
   const db = useDB()
 
-  const listRows = db
+  const listRows = await db
     .select({ list: lists, user: users })
     .from(lists)
     .innerJoin(users, eq(lists.userId, users.id))
@@ -17,7 +17,7 @@ export default defineEventHandler(async (_event) => {
   const listIds = listRows.map(r => r.list.id)
 
   // Get up to 4 preview films per list
-  const listFilmRows = db
+  const listFilmRows = await db
     .select({ listId: listFilms.listId, filmId: listFilms.filmId, position: listFilms.position })
     .from(listFilms)
     .where(inArray(listFilms.listId, listIds))
@@ -26,7 +26,7 @@ export default defineEventHandler(async (_event) => {
 
   const filmIds = [...new Set(listFilmRows.map(r => r.filmId))]
   const filmRows = filmIds.length > 0
-    ? db.select().from(films).where(inArray(films.id, filmIds)).all()
+    ? await db.select().from(films).where(inArray(films.id, filmIds)).all()
     : []
   const filmMap = new Map(filmRows.map(f => [f.id, f]))
 

@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
 
   const now = new Date().toISOString()
 
-  const [review] = db
+  const [review] = await db
     .insert(reviews)
     .values({
       filmId,
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     .returning()
     .all()
 
-  db.insert(activity)
+  await db.insert(activity)
     .values({
       userId: userId,
       filmId,
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
     .run()
 
   // Mark as watched when reviewing
-  db.insert(userFilmInteractions)
+  await db.insert(userFilmInteractions)
     .values({
       userId: userId,
       filmId,

@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   const db = useDB()
   const filmId = Number(getRouterParam(event, 'id'))
 
-  const reviewRows = db
+  const reviewRows = await db
     .select({
       review: reviews,
       user: users,

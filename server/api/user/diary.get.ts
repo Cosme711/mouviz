@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const userId = session.user.id
   const db = useDB()
 
-  const entries = db
+  const entries = await db
     .select()
     .from(diaryEntries)
     .where(eq(diaryEntries.userId, userId))
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
   if (entries.length === 0) return { entries: [] }
 
   const filmIds = [...new Set(entries.map(e => e.filmId))]
-  const filmRows = db.select().from(films).where(inArray(films.id, filmIds)).all()
+  const filmRows = await db.select().from(films).where(inArray(films.id, filmIds)).all()
   const filmMap = new Map(filmRows.map(f => [f.id, f]))
 
   return {

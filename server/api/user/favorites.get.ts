@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const userId = session.user.id
   const db = useDB()
 
-  const favRows = db
+  const favRows = await db
     .select({ filmId: favoriteFilms.filmId, position: favoriteFilms.position })
     .from(favoriteFilms)
     .where(eq(favoriteFilms.userId, userId))
@@ -17,10 +17,10 @@ export default defineEventHandler(async (event) => {
   const filmIds = favRows.map(r => r.filmId)
   if (filmIds.length === 0) return { films: [] }
 
-  const filmRows = db.select().from(films).where(inArray(films.id, filmIds)).all()
+  const filmRows = await db.select().from(films).where(inArray(films.id, filmIds)).all()
   const filmMap = new Map(filmRows.map(f => [f.id, f]))
 
-  const interactions = db
+  const interactions = await db
     .select()
     .from(userFilmInteractions)
     .where(and(

@@ -4,7 +4,7 @@ import { activity, users, films } from '../../database/schema'
 export default defineEventHandler(async (_event) => {
   const db = useDB()
 
-  const activityRows = db
+  const activityRows = await db
     .select({
       act: activity,
       user: users,
@@ -18,7 +18,7 @@ export default defineEventHandler(async (_event) => {
   if (activityRows.length === 0) return { activities: [] }
 
   const filmIds = [...new Set(activityRows.map(r => r.act.filmId))]
-  const filmRows = db.select().from(films).where(inArray(films.id, filmIds)).all()
+  const filmRows = await db.select().from(films).where(inArray(films.id, filmIds)).all()
   const filmMap = new Map(filmRows.map(f => [f.id, f]))
 
   return {

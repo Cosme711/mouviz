@@ -11,7 +11,7 @@ export default defineOAuthGoogleEventHandler({
     const avatar = googleUser.picture ? String(googleUser.picture) : ''
 
     // Try to find existing user by googleId
-    let existing = db
+    let existing = await db
       .select()
       .from(users)
       .where(eq(users.googleId, googleId))
@@ -19,7 +19,7 @@ export default defineOAuthGoogleEventHandler({
 
     // Fall back to email match (for existing seeded users)
     if (!existing && email) {
-      existing = db
+      existing = await db
         .select()
         .from(users)
         .where(eq(users.email, email))
@@ -29,7 +29,7 @@ export default defineOAuthGoogleEventHandler({
     if (existing) {
       // Update googleId/avatar if missing
       if (!existing.googleId || !existing.avatar) {
-        db.update(users)
+        await db.update(users)
           .set({
             googleId: existing.googleId ?? googleId,
             avatar: existing.avatar || avatar,
@@ -56,11 +56,11 @@ export default defineOAuthGoogleEventHandler({
       // Ensure uniqueness by appending a counter if needed
       let username = baseUsername
       let counter = 1
-      while (db.select().from(users).where(eq(users.username, username)).get()) {
+      while (await db.select().from(users).where(eq(users.username, username)).get()) {
         username = `${baseUsername}${counter++}`
       }
 
-      const [newUser] = db
+      const [newUser] = await db
         .insert(users)
         .values({
           username,

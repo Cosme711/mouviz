@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const db = useDB()
   const filmId = Number(getRouterParam(event, 'id'))
 
-  const similarRows = db
+  const similarRows = await db
     .select({ similarFilmId: similarFilms.similarFilmId })
     .from(similarFilms)
     .where(eq(similarFilms.filmId, filmId))
@@ -18,13 +18,13 @@ export default defineEventHandler(async (event) => {
   }
 
   const similarFilmIds = similarRows.map(r => r.similarFilmId)
-  const similarFilmRows = db
+  const similarFilmRows = await db
     .select()
     .from(films)
     .where(inArray(films.id, similarFilmIds))
     .all()
 
-  const interactions = db
+  const interactions = await db
     .select()
     .from(userFilmInteractions)
     .where(and(

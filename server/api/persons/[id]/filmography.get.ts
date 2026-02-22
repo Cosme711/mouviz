@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const db = useDB()
   const personId = Number(getRouterParam(event, 'id'))
 
-  const creditRows = db
+  const creditRows = await db
     .select({ filmId: filmCredits.filmId })
     .from(filmCredits)
     .where(eq(filmCredits.personId, personId))
@@ -18,14 +18,14 @@ export default defineEventHandler(async (event) => {
     return { films: [] }
   }
 
-  const filmRows = db
+  const filmRows = await db
     .select()
     .from(films)
     .where(inArray(films.id, filmIds))
     .orderBy(desc(films.year))
     .all()
 
-  const interactions = db
+  const interactions = await db
     .select()
     .from(userFilmInteractions)
     .where(and(

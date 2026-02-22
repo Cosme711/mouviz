@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'title is required' })
   }
 
-  const [list] = db
+  const [list] = await db
     .insert(lists)
     .values({
       userId: userId,

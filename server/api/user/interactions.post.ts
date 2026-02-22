@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'filmId and field (watched|liked|inWatchlist) required' })
   }
 
-  const existing = db
+  const existing = await db
     .select()
     .from(userFilmInteractions)
     .where(and(
@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
   const newLiked = field === 'liked' ? newValue : (existing?.liked ?? false)
   const newInWatchlist = field === 'inWatchlist' ? newValue : (existing?.inWatchlist ?? false)
 
-  db.insert(userFilmInteractions)
+  await db.insert(userFilmInteractions)
     .values({
       userId: userId,
       filmId,
@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
 
   // Log activity for watched/liked when toggling on
   if ((field === 'watched' || field === 'liked') && newValue) {
-    db.insert(activity)
+    await db.insert(activity)
       .values({
         userId: userId,
         filmId,
