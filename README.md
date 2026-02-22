@@ -1,75 +1,54 @@
-# Nuxt Minimal Starter
+# MOUVIZ
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Plateforme de suivi et découverte de films (Letterboxd-like). Dark theme, données TMDB, stack Nuxt 4 + SQLite.
 
-## Setup
+## Prérequis
 
-Make sure to install dependencies:
+- Node.js ≥ 20
+- pnpm
+- Token TMDB API (gratuit sur [themoviedb.org](https://www.themoviedb.org/settings/api))
+
+## Installation
 
 ```bash
-# npm
-npm install
-
-# pnpm
 pnpm install
 
-# yarn
-yarn install
+# Rebuild du module natif SQLite (nécessaire sur nouvelle machine)
+npx node-gyp rebuild --directory node_modules/.pnpm/better-sqlite3*/node_modules/better-sqlite3
 
-# bun
-bun install
+cp .env.example .env
+# → remplir TMDB_API_TOKEN dans .env
+
+pnpm run db:migrate   # crée db/mouviz.db avec les tables
+pnpm run db:seed      # peuple la DB depuis TMDB (~15s)
 ```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
+## Développement
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+pnpm run dev          # http://localhost:3000
 ```
 
 ## Production
 
-Build the application for production:
-
 ```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+pnpm run build
+pnpm run preview
 ```
 
-Locally preview production build:
+## Base de données
 
 ```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
+pnpm run db:generate  # regénérer les migrations après un changement de schéma
+pnpm run db:migrate   # appliquer les migrations
+pnpm run db:seed      # repeupler depuis TMDB
+pnpm run db:studio    # UI Drizzle Studio
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+## Documentation technique
+
+Voir le dossier [`docs/`](./docs/) :
+
+- [`docs/architecture.md`](./docs/architecture.md) — structure du projet, stack, conventions
+- [`docs/api.md`](./docs/api.md) — toutes les routes API avec paramètres et réponses
+- [`docs/database.md`](./docs/database.md) — schéma complet, relations, notes ORM
