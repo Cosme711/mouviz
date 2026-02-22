@@ -34,8 +34,13 @@
 
 <script setup lang="ts">
 import { ChevronLeft, Heart } from 'lucide-vue-next'
-import { mockLists } from '~/data/mockData'
+import type { FilmList } from '~/types'
 
 const route = useRoute()
-const list = computed(() => mockLists.find(l => l.id === route.params.id))
+const listId = computed(() => Number(route.params.id))
+
+const { data: list } = await useFetch<FilmList>(
+  () => `/api/lists/${listId.value}`,
+  { watch: [listId] },
+)
 </script>

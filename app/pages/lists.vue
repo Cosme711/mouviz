@@ -9,7 +9,7 @@
     <!-- Lists -->
     <div class="space-y-5">
       <NuxtLink
-        v-for="list in mockLists"
+        v-for="list in lists"
         :key="list.id"
         :to="`/lists/${list.id}`"
         class="block rounded-xl p-5 transition-colors hover:bg-[#333d4c] group"
@@ -51,7 +51,7 @@
                 Par <span style="color: #99aabb;">{{ list.creator }}</span>
               </span>
               <span class="text-sm" style="color: #6c7a89;">
-                {{ list.films.length }} films
+                {{ list.filmCount ?? list.films.length }} films
               </span>
               <div class="flex items-center gap-1">
                 <Heart :size="13" style="color: #6c7a89;" />
@@ -67,5 +67,11 @@
 
 <script setup lang="ts">
 import { Heart } from 'lucide-vue-next'
-import { mockLists } from '~/data/mockData'
+import type { FilmList } from '~/types'
+
+const { data: listsData } = await useFetch('/api/lists', {
+  default: () => ({ lists: [] as FilmList[] }),
+})
+
+const lists = computed(() => listsData.value?.lists ?? [])
 </script>

@@ -1,0 +1,100 @@
+import { eq, and, desc, inArray } from 'drizzle-orm'
+import {
+  films,
+  genres,
+  filmGenres,
+  persons,
+  filmCredits,
+  userFilmInteractions,
+  reviews,
+  users,
+} from '../../database/schema'
+
+const CURRENT_USER_ID = 1
+
+export default defineEventHandler(async (event) => {
+  const db = useDB()
+  const filmId = Number(getRouterParam(event, 'id'))
+
+  if (!filmId || isNaN(filmId)) {
+    throw createError({ statusCode: 400, message: 'Invalid film ID' })
+  }
+
+  const film = db.select().from(films).where(eq(films.id, filmId)).get()
+  if (!film) {
+    throw createError({ statusCode: 404, message: 'Film not found' })
+  }
+
+  // Genres
+  const filmGenreRows = db
+    .select({ name: genres.name })
+    .from(filmGenres)
+    .innerJoin(genres, eq(filmGenres.genreId, genres.id))
+    .where(eq(filmGenres.filmId, filmId))
+    .all()
+  const genreList = filmGenreRows.map(g => g.name)
+
+  // Director
+  const directorRow = db
+    .select({ name: persons.name })
+    .from(filmCredits)
+    .innerJoin(persons, eq(filmCredits.personId, persons.id))
+    .where(and(eq(filmCredits.filmId, filmId), eq(filmCredits.role, 'director')))
+    .get()
+
+  // Cast
+  const castRows = db
+    .select({
+      id: persons.id,
+      name: persons.name,
+      character: filmCredits.character,
+      photoPath: persons.photoPath,
+      order: filmCredits.order,
+    })
+    .from(filmCredits)
+    .innerJoin(persons, eq(filmCredits.personId, persons.id))
+    .where(and(eq(filmCredits.filmId, filmId), eq(filmCredits.role, 'actor')))
+    .orderBy(filmCredits.order)
+    .all()
+
+  // User interaction
+  const interaction = db
+    .select()
+    .from(userFilmInteractions)
+    .where(and(
+      eq(userFilmInteractions.userId, CURRENT_USER_ID),
+      eq(userFilmInteractions.filmId, filmId),
+    ))
+    .get()
+
+  // Review count
+  const reviewRows = db
+    .select({ id: reviews.id })
+    .from(reviews)
+    .where(eq(reviews.filmId, filmId))
+    .all()
+
+  return {
+    id: film.id,
+    title: film.title,
+    year: film.year,
+    poster: tmdbImage.poster(film.posterPath),
+    backdrop: tmdbImage.backdrop(film.backdropPath),
+    rating: film.avgRating,
+    watched: interaction?.watched ?? false,
+    liked: interaction?.liked ?? false,
+    inWatchlist: interaction?.inWatchlist ?? false,
+    userRating: interaction?.userRating ?? undefined,
+    director: directorRow?.name ?? 'Inconnu',
+    genres: genreList,
+    duration: film.duration,
+    synopsis: film.synopsis,
+    reviewCount: reviewRows.length,
+    cast: castRows.map(c => ({
+      id: c.id,
+      name: c.name,
+      role: c.character ?? '',
+      photo: tmdbImage.photo(c.photoPath),
+    })),
+  }
+})

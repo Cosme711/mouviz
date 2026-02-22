@@ -44,9 +44,9 @@
 </template>
 
 <script setup lang="ts">
-import type { Film } from '~/data/mockData'
+import type { FilmCard } from '~/types'
 
 defineProps<{
-  film: Film
+  film: FilmCard
 }>()
 </script>

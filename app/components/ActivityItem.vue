@@ -50,13 +50,13 @@
 
 <script setup lang="ts">
 import { Eye, Heart, MessageSquare, List } from 'lucide-vue-next'
-import type { Film } from '~/data/mockData'
+import type { FilmCard } from '~/types'
 
 const props = defineProps<{
   type: 'watched' | 'liked' | 'reviewed' | 'listed'
   user: string
   avatar: string
-  film: Film
+  film: FilmCard
   rating?: number
   review?: string
   date: string

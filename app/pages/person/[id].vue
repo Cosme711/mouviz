@@ -33,7 +33,7 @@
             </div>
             <div v-if="person.nationality">
               <p class="text-lg font-semibold text-white">{{ person.nationality }}</p>
-              <p class="text-xs" style="color: #6c7a89;">Nationalité</p>
+              <p class="text-xs" style="color: #6c7a89;">Lieu de naissance</p>
             </div>
           </div>
 
@@ -58,28 +58,6 @@
           <PosterCard v-for="film in filmography" :key="film.id" :film="film" />
         </div>
       </section>
-
-      <!-- Similar artists -->
-      <section>
-        <h2 class="text-xl font-semibold text-white mb-5">Artistes similaires</h2>
-        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
-          <NuxtLink
-            v-for="p in similarPersons"
-            :key="p.id"
-            :to="`/person/${p.id}`"
-            class="group text-center"
-          >
-            <img
-              :src="p.photo"
-              :alt="p.name"
-              class="w-full rounded-xl object-cover mb-2 transition-opacity group-hover:opacity-80"
-              style="aspect-ratio: 2/3;"
-            />
-            <p class="text-sm font-medium text-white leading-tight">{{ p.name }}</p>
-            <p class="text-xs mt-0.5" style="color: #6c7a89;">{{ p.role }}</p>
-          </NuxtLink>
-        </div>
-      </section>
     </div>
   </div>
 
@@ -92,20 +70,23 @@
 </template>
 
 <script setup lang="ts">
-import { mockPersons, mockFilms } from '~/data/mockData'
+import type { PersonDetail, FilmCard } from '~/types'
 
 const route = useRoute()
-const person = computed(() => mockPersons.find(p => p.id === route.params.id))
+const personId = computed(() => Number(route.params.id))
 
-// Films featuring this person
-const filmography = computed(() =>
-  mockFilms.filter(f => f.cast.some(c => c.id === route.params.id))
-    .concat(mockFilms.slice(0, 8))
-    .slice(0, 8)
+const { data: person } = await useFetch<PersonDetail>(
+  () => `/api/persons/${personId.value}`,
+  { watch: [personId] },
 )
 
-// Other artists (excluding current)
-const similarPersons = computed(() =>
-  mockPersons.filter(p => p.id !== route.params.id).slice(0, 6)
+const { data: filmographyData } = await useFetch(
+  () => `/api/persons/${personId.value}/filmography`,
+  {
+    watch: [personId],
+    default: () => ({ films: [] as FilmCard[] }),
+  },
 )
+
+const filmography = computed(() => filmographyData.value?.films ?? [])
 </script>

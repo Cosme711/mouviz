@@ -1,9 +1,9 @@
 <template>
   <div>
     <!-- Hero Section -->
-    <section class="relative h-[500px] overflow-hidden">
+    <section v-if="heroFilm" class="relative h-[500px] overflow-hidden">
       <img
-        :src="heroFilm.backdrop"
+        :src="heroFilm.backdrop || heroFilm.poster"
         :alt="heroFilm.title"
         class="absolute inset-0 w-full h-full object-cover"
       />
@@ -23,7 +23,11 @@
           <!-- Info -->
           <div class="pb-6">
             <div class="flex items-center gap-2 mb-3">
-              <GenrePill v-for="genre in heroFilm.genres.slice(0, 3)" :key="genre" :genre="genre" />
+              <GenrePill
+                v-for="genre in heroFilm.genres.slice(0, 3)"
+                :key="genre"
+                :genre="genre"
+              />
             </div>
             <h1 class="text-4xl md:text-5xl font-bold text-white mb-2">{{ heroFilm.title }}</h1>
             <p class="text-lg mb-4" style="color: #99aabb;">
@@ -64,15 +68,14 @@
         <section>
           <h2 class="text-xl font-semibold text-white mb-5">Activité des amis</h2>
           <div class="rounded-lg divide-y" style="background-color: #2c3440; border-color: #445566; divide-color: #445566;">
-            <div v-for="activity in mockActivities" :key="activity.id" class="px-4">
+            <div v-for="act in activities" :key="act.id" class="px-4">
               <ActivityItem
-                :type="activity.type"
-                :user="activity.user"
-                :avatar="activity.avatar"
-                :film="activity.film"
-                :rating="activity.rating"
-                :review="activity.review"
-                :date="activity.date"
+                :type="act.type"
+                :user="act.user"
+                :avatar="act.avatar"
+                :film="act.film"
+                :rating="act.rating"
+                :date="act.date"
               />
             </div>
           </div>
@@ -98,9 +101,33 @@
 </template>
 
 <script setup lang="ts">
-import { mockFilms, mockActivities } from '~/data/mockData'
+import type { FilmDetail, Activity, FilmCard } from '~/types'
 
-const heroFilm = mockFilms[3]!
-const popularFilms = mockFilms.slice(0, 16)
-const watchlistFilms = mockFilms.filter(f => f.inWatchlist).slice(0, 6)
+const { data: filmsData } = await useFetch('/api/films', {
+  query: { limit: 16, sortBy: 'popularity' },
+  default: () => ({ films: [] as FilmCard[], total: 0, genres: [] as string[] }),
+})
+
+const popularFilms = computed(() => filmsData.value?.films ?? [])
+const firstFilmId = computed(() => popularFilms.value[0]?.id)
+
+const { data: heroData } = await useFetch<FilmDetail>(
+  () => `/api/films/${firstFilmId.value}`,
+  {
+    watch: [firstFilmId],
+    default: () => null as FilmDetail | null,
+  },
+)
+
+const { data: activityData } = await useFetch('/api/activity', {
+  default: () => ({ activities: [] as Activity[] }),
+})
+
+const { data: watchlistData } = await useFetch('/api/user/watchlist', {
+  default: () => ({ films: [] as FilmCard[] }),
+})
+
+const activities = computed(() => activityData.value?.activities ?? [])
+const watchlistFilms = computed(() => (watchlistData.value?.films ?? []).slice(0, 6))
+const heroFilm = computed(() => heroData.value ?? null)
 </script>

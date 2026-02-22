@@ -7,14 +7,14 @@
     </div>
 
     <!-- Grouped by month -->
-    <div v-for="[month, entries] in groupedEntries" :key="month" class="mb-10">
+    <div v-for="[month, monthEntries] in groupedEntries" :key="month" class="mb-10">
       <h2 class="text-lg font-semibold mb-4 pb-2 border-b" style="color: #00e054; border-color: #445566;">
         {{ month }}
       </h2>
 
       <div class="space-y-3">
         <div
-          v-for="entry in entries"
+          v-for="entry in monthEntries"
           :key="entry.id"
           class="flex gap-4 p-4 rounded-lg"
           style="background-color: #2c3440;"
@@ -79,17 +79,27 @@
         </div>
       </div>
     </div>
+
+    <div v-if="entries.length === 0" class="text-center py-20">
+      <p class="text-lg font-medium" style="color: #6c7a89;">Aucune entrée dans le journal</p>
+      <p class="text-sm mt-1" style="color: #445566;">Commencez à noter vos films !</p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { mockDiaryEntries } from '~/data/mockData'
-import type { DiaryEntry } from '~/data/mockData'
+import type { DiaryEntry } from '~/types'
+
+const { data: diaryData } = await useFetch('/api/user/diary', {
+  default: () => ({ entries: [] as DiaryEntry[] }),
+})
+
+const entries = computed(() => diaryData.value?.entries ?? [])
 
 const groupedEntries = computed(() => {
   const groups = new Map<string, DiaryEntry[]>()
 
-  for (const entry of mockDiaryEntries) {
+  for (const entry of entries.value) {
     const monthKey = new Date(entry.date).toLocaleDateString('fr-FR', {
       month: 'long',
       year: 'numeric',

@@ -3,7 +3,7 @@
     <!-- Hero -->
     <section class="relative h-[600px] overflow-hidden">
       <img
-        :src="film.backdrop"
+        :src="film.backdrop || film.poster"
         :alt="film.title"
         class="absolute inset-0 w-full h-full object-cover"
         style="filter: blur(2px);"
@@ -30,32 +30,35 @@
               {{ film.year }} · {{ film.director }} · {{ film.duration }} min
             </p>
             <StarRating :rating="film.rating" size="lg" :show-value="true" />
-            <p class="text-sm mt-1 mb-5" style="color: #6c7a89;">{{ film.reviews.length }} critiques</p>
+            <p class="text-sm mt-1 mb-5" style="color: #6c7a89;">{{ film.reviewCount }} critiques</p>
 
             <!-- Action buttons -->
             <div class="flex items-center gap-3 flex-wrap">
               <button
                 class="flex items-center gap-2 px-4 py-2 rounded font-semibold text-sm transition-colors"
-                :style="film.watched
+                :style="localInteraction.watched
                   ? 'background-color: #00e054; color: #14181c;'
                   : 'background-color: #2c3440; color: #e8eaf0; border: 1px solid #445566;'"
+                @click="toggle('watched')"
               >
                 <Eye :size="16" />
-                {{ film.watched ? 'Vu' : 'Marquer comme vu' }}
+                {{ localInteraction.watched ? 'Vu' : 'Marquer comme vu' }}
               </button>
               <button
                 class="flex items-center gap-2 px-4 py-2 rounded font-semibold text-sm border transition-colors hover:bg-white/10"
-                :style="film.inWatchlist ? 'border-color: #40bcf4; color: #40bcf4;' : 'border-color: #445566; color: #99aabb;'"
+                :style="localInteraction.inWatchlist ? 'border-color: #40bcf4; color: #40bcf4;' : 'border-color: #445566; color: #99aabb;'"
+                @click="toggle('inWatchlist')"
               >
                 <Bookmark :size="16" />
-                {{ film.inWatchlist ? 'En watchlist' : 'Watchlist' }}
+                {{ localInteraction.inWatchlist ? 'En watchlist' : 'Watchlist' }}
               </button>
               <button
                 class="flex items-center gap-2 px-4 py-2 rounded font-semibold text-sm border transition-colors hover:bg-white/10"
-                :style="film.liked ? 'border-color: #e05400; color: #e05400;' : 'border-color: #445566; color: #99aabb;'"
+                :style="localInteraction.liked ? 'border-color: #e05400; color: #e05400;' : 'border-color: #445566; color: #99aabb;'"
+                @click="toggle('liked')"
               >
                 <Heart :size="16" />
-                {{ film.liked ? 'Aimé' : "J'aime" }}
+                {{ localInteraction.liked ? 'Aimé' : "J'aime" }}
               </button>
               <button
                 class="flex items-center gap-2 px-4 py-2 rounded font-semibold text-sm border transition-colors hover:bg-white/10"
@@ -99,11 +102,11 @@
       </section>
 
       <!-- Reviews -->
-      <section v-if="film.reviews.length > 0">
+      <section v-if="reviews.length > 0">
         <h2 class="text-xl font-semibold text-white mb-4">Critiques</h2>
         <div class="space-y-4">
           <div
-            v-for="review in film.reviews"
+            v-for="review in reviews"
             :key="review.id"
             class="p-4 rounded-lg"
             style="background-color: #2c3440;"
@@ -148,13 +151,57 @@
 
 <script setup lang="ts">
 import { Eye, Bookmark, Heart, Share2 } from 'lucide-vue-next'
-import { mockFilms } from '~/data/mockData'
+import type { FilmDetail, Review, FilmCard } from '~/types'
 
 const route = useRoute()
-const film = computed(() => mockFilms.find(f => f.id === route.params.id))
-const similarFilms = computed(() =>
-  (film.value?.similarFilms ?? [])
-    .map(id => mockFilms.find(f => f.id === id))
-    .filter(Boolean) as typeof mockFilms
+const filmId = computed(() => Number(route.params.id))
+
+const { data: film, error } = await useFetch<FilmDetail>(
+  () => `/api/films/${filmId.value}`,
+  { watch: [filmId] },
 )
+
+const { data: reviewsData } = await useFetch(
+  () => `/api/films/${filmId.value}/reviews`,
+  {
+    watch: [filmId],
+    default: () => ({ reviews: [] as Review[] }),
+  },
+)
+
+const { data: similarData } = await useFetch(
+  () => `/api/films/${filmId.value}/similar`,
+  {
+    watch: [filmId],
+    default: () => ({ films: [] as FilmCard[] }),
+  },
+)
+
+const reviews = computed(() => reviewsData.value?.reviews ?? [])
+const similarFilms = computed(() => similarData.value?.films ?? [])
+
+// Local interaction state (optimistic UI)
+const localInteraction = reactive({
+  watched: film.value?.watched ?? false,
+  liked: film.value?.liked ?? false,
+  inWatchlist: film.value?.inWatchlist ?? false,
+})
+
+watch(film, (newFilm) => {
+  if (newFilm) {
+    localInteraction.watched = newFilm.watched
+    localInteraction.liked = newFilm.liked
+    localInteraction.inWatchlist = newFilm.inWatchlist
+  }
+}, { immediate: true })
+
+async function toggle(field: 'watched' | 'liked' | 'inWatchlist') {
+  localInteraction[field] = !localInteraction[field]
+  await $fetch('/api/user/interactions', {
+    method: 'POST',
+    body: { filmId: filmId.value, field },
+  }).catch(() => {
+    localInteraction[field] = !localInteraction[field] // revert on error
+  })
+}
 </script>

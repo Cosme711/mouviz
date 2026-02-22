@@ -17,4 +17,15 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+
+  runtimeConfig: {
+    tmdbApiToken: process.env.TMDB_API_TOKEN ?? '',
+    public: {},
+  },
+
+  nitro: {
+    externals: {
+      external: ['better-sqlite3'],
+    },
+  },
 })

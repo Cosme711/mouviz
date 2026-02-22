@@ -27,7 +27,7 @@
         Tous
       </button>
       <button
-        v-for="genre in allGenres"
+        v-for="genre in availableGenres"
         :key="genre"
         class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
         :style="selectedGenre === genre ? 'background-color: #00e054; color: #14181c;' : 'background-color: #2c3440; color: #99aabb;'"
@@ -60,7 +60,7 @@
         <SlidersHorizontal :size="14" />
         Filtres
       </button>
-      <span class="text-sm ml-auto" style="color: #6c7a89;">{{ filteredFilms.length }} résultats</span>
+      <span class="text-sm ml-auto" style="color: #6c7a89;">{{ filmsData?.total ?? 0 }} résultats</span>
     </div>
 
     <div class="flex gap-6">
@@ -106,11 +106,11 @@
       <!-- Results grid -->
       <div class="flex-1">
         <div
-          v-if="filteredFilms.length > 0"
+          v-if="films.length > 0"
           class="grid gap-3"
           :class="showFilters ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-6' : 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8'"
         >
-          <PosterCard v-for="film in filteredFilms" :key="film.id" :film="film" />
+          <PosterCard v-for="film in films" :key="film.id" :film="film" />
         </div>
         <div v-else class="text-center py-20">
           <p class="text-lg font-medium" style="color: #6c7a89;">Aucun film trouvé</p>
@@ -123,7 +123,7 @@
 
 <script setup lang="ts">
 import { Search, SlidersHorizontal } from 'lucide-vue-next'
-import { mockFilms } from '~/data/mockData'
+import type { FilmCard } from '~/types'
 
 const query = ref('')
 const selectedGenre = ref<string | null>(null)
@@ -139,42 +139,23 @@ const statusOptions = [
   { value: 'watchlist', label: 'Watchlist' },
 ]
 
-const allGenres = computed(() => {
-  const genres = new Set<string>()
-  mockFilms.forEach(f => f.genres.forEach(g => genres.add(g)))
-  return Array.from(genres).sort()
+const apiQuery = computed(() => ({
+  limit: 200,
+  sortBy: sortBy.value,
+  q: query.value || undefined,
+  genre: selectedGenre.value || undefined,
+  minRating: minRating.value > 0 ? minRating.value : undefined,
+  watched: selectedStatus.value.includes('watched') ? '1' : undefined,
+  notWatched: selectedStatus.value.includes('not_watched') ? '1' : undefined,
+  liked: selectedStatus.value.includes('liked') ? '1' : undefined,
+  watchlist: selectedStatus.value.includes('watchlist') ? '1' : undefined,
+}))
+
+const { data: filmsData } = useFetch('/api/films', {
+  query: apiQuery,
+  default: () => ({ films: [] as FilmCard[], total: 0, genres: [] as string[] }),
 })
 
-const filteredFilms = computed(() => {
-  let films = [...mockFilms]
-
-  if (query.value.trim()) {
-    const q = query.value.toLowerCase()
-    films = films.filter(f =>
-      f.title.toLowerCase().includes(q) ||
-      f.director.toLowerCase().includes(q) ||
-      f.genres.some(g => g.toLowerCase().includes(q))
-    )
-  }
-
-  if (selectedGenre.value) {
-    films = films.filter(f => f.genres.includes(selectedGenre.value!))
-  }
-
-  if (minRating.value > 0) {
-    films = films.filter(f => f.rating >= minRating.value)
-  }
-
-  if (selectedStatus.value.includes('watched')) films = films.filter(f => f.watched)
-  if (selectedStatus.value.includes('not_watched')) films = films.filter(f => !f.watched)
-  if (selectedStatus.value.includes('liked')) films = films.filter(f => f.liked)
-  if (selectedStatus.value.includes('watchlist')) films = films.filter(f => f.inWatchlist)
-
-  switch (sortBy.value) {
-    case 'rating': return films.sort((a, b) => b.rating - a.rating)
-    case 'year': return films.sort((a, b) => b.year - a.year)
-    case 'title': return films.sort((a, b) => a.title.localeCompare(b.title))
-    default: return films
-  }
-})
+const films = computed(() => filmsData.value?.films ?? [])
+const availableGenres = computed(() => filmsData.value?.genres ?? [])
 </script>
