@@ -3,14 +3,9 @@ config()
 
 import { createClient } from '@libsql/client'
 import { drizzle } from 'drizzle-orm/libsql'
-import { migrate } from 'drizzle-orm/libsql/migrator'
 import { eq, inArray } from 'drizzle-orm'
-import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import * as schema from '../server/database/schema'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const ROOT = join(__dirname, '..')
 
 // ─── DB Setup ───────────────────────────────────────────────────────────────
 
@@ -19,10 +14,6 @@ const client = createClient({
   authToken: process.env.TURSO_AUTH_TOKEN,
 })
 const db = drizzle(client, { schema })
-
-// Run pending migrations
-await migrate(db, { migrationsFolder: join(ROOT, 'server/database/migrations') })
-console.log('✓ Migrations applied')
 
 // ─── TMDB Helpers ────────────────────────────────────────────────────────────
 
