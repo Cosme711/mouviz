@@ -25,7 +25,7 @@ alwaysApply: true
 - Pas de logique métier dans les templates — extraire dans des computed/méthodes
 
 ## Fetching de données
-- Utilise `useFetch('/api/...')` dans les pages/composants — **pas d'imports depuis `app/data/mockData.ts`**
+- Utilise `useFetch('/api/...')` dans les pages/composants
 - Toujours gérer les états `pending` et `error` de `useFetch`
 - Les routes API protégées utilisent `getUserSession(event)` et retournent 401 si non authentifié
 
