@@ -177,12 +177,6 @@ const { data: similarData } = await useFetch(
   },
 )
 
-const regionNames = new Intl.DisplayNames(['fr'], { type: 'region' })
-function countryName(code: string) {
-  if (!code) return ''
-  try { return regionNames.of(code) ?? code } catch { return code }
-}
-
 const reviews = computed(() => reviewsData.value?.reviews ?? [])
 const similarFilms = computed(() => similarData.value?.films ?? [])
 
