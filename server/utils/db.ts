@@ -9,6 +9,8 @@ export function useDB() {
     const client = postgres(process.env.DATABASE_URL!, {
       max: 1,
       prepare: false, // required for Supabase Transaction Pooler (PgBouncer)
+      connect_timeout: 10, // fail fast on cold starts
+      idle_timeout: 20,
     })
     _db = drizzle(client, { schema })
   }

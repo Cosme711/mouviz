@@ -5,6 +5,15 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
+  nitro: {
+    preset: 'vercel',
+    vercel: {
+      config: {
+        maxDuration: 30,
+      },
+    },
+  },
+
   css: ['~/assets/css/tailwind.css'],
 
   modules: ['shadcn-nuxt', 'nuxt-auth-utils'],
