@@ -8,6 +8,13 @@
       "when": 1773345121808,
       "tag": "0000_fair_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773349453000,
+      "tag": "0001_rapid_puck",
+      "breakpoints": true
     }
   ]
 }

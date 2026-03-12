@@ -84,6 +84,7 @@ export default defineEventHandler(async (event) => {
     genres: genreList,
     duration: film.duration,
     synopsis: film.synopsis,
+    country: film.country,
     reviewCount: reviewRows.length,
     cast: castRows.map(c => ({
       id: c.id,
