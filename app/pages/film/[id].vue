@@ -27,7 +27,7 @@
             </div>
             <h1 class="text-4xl font-bold text-white mb-1">{{ film.title }}</h1>
             <p class="text-lg mb-4" style="color: #99aabb;">
-              {{ film.year }} · {{ film.director }} · {{ film.duration }} min
+              {{ film.year }} · {{ film.director }} · {{ film.duration }} min{{ film.country ? ' · ' + countryName(film.country) : '' }}
             </p>
             <StarRating :rating="film.rating" size="lg" :show-value="true" />
             <p class="text-sm mt-1 mb-5" style="color: #6c7a89;">{{ film.reviewCount }} critiques</p>
@@ -176,6 +176,12 @@ const { data: similarData } = await useFetch(
     default: () => ({ films: [] as FilmCard[] }),
   },
 )
+
+const regionNames = new Intl.DisplayNames(['fr'], { type: 'region' })
+function countryName(code: string) {
+  if (!code) return ''
+  try { return regionNames.of(code) ?? code } catch { return code }
+}
 
 const reviews = computed(() => reviewsData.value?.reviews ?? [])
 const similarFilms = computed(() => similarData.value?.films ?? [])

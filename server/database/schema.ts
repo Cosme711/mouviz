@@ -10,6 +10,7 @@ export const films = pgTable('films', {
   backdropPath: text('backdrop_path').notNull().default(''),
   avgRating: real('avg_rating').notNull().default(0),
   popularity: real('popularity').notNull().default(0),
+  country: text('country').notNull().default(''),
 })
 
 export const persons = pgTable('persons', {

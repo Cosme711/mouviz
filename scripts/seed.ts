@@ -65,6 +65,7 @@ interface TmdbFilm {
 interface TmdbFilmDetail extends TmdbFilm {
   runtime: number | null; overview: string
   genres: TmdbGenre[]
+  production_countries: Array<{ iso_3166_1: string; name: string }>
 }
 interface TmdbCreditsResult {
   cast: Array<{ id: number; name: string; character: string; order: number; profile_path: string | null }>
@@ -136,6 +137,7 @@ for (const detail of filmDetails) {
       backdropPath: detail.backdrop_path ?? '',
       avgRating: Math.round((detail.vote_average / 2) * 10) / 10,
       popularity: detail.popularity,
+      country: detail.production_countries[0]?.iso_3166_1 ?? '',
     })
     .where(eq(schema.films.id, detail.id))
 

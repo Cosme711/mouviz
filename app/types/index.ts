@@ -35,6 +35,7 @@ export interface FilmDetail extends FilmCard {
   synopsis: string
   reviewCount: number
   cast: CastMember[]
+  country: string
 }
 
 export interface Activity {
