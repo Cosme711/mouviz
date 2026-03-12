@@ -1,18 +1,15 @@
 import { config } from 'dotenv'
 config()
 
-import { createClient } from '@libsql/client'
-import { drizzle } from 'drizzle-orm/libsql'
+import postgres from 'postgres'
+import { drizzle } from 'drizzle-orm/postgres-js'
 import { eq, inArray } from 'drizzle-orm'
 import { fileURLToPath } from 'url'
 import * as schema from '../server/database/schema'
 
 // ─── DB Setup ───────────────────────────────────────────────────────────────
 
-const client = createClient({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN,
-})
+const client = postgres(process.env.DATABASE_URL!, { max: 1 })
 const db = drizzle(client, { schema })
 
 // ─── TMDB Helpers ────────────────────────────────────────────────────────────
@@ -83,7 +80,7 @@ interface TmdbPerson {
 console.log('\n── Step 1: Genres')
 const { genres: tmdbGenres } = await tmdbFetch<{ genres: TmdbGenre[] }>('/genre/movie/list?language=fr-FR')
 for (const g of tmdbGenres) {
-  await db.insert(schema.genres).values({ id: g.id, name: g.name }).onConflictDoNothing().run()
+  await db.insert(schema.genres).values({ id: g.id, name: g.name }).onConflictDoNothing()
 }
 console.log(`✓ ${tmdbGenres.length} genres inserted`)
 
@@ -115,7 +112,6 @@ for (const f of popularFilms) {
       popularity: f.popularity,
     })
     .onConflictDoNothing()
-    .run()
 }
 
 // ─── Step 3: Film Details (runtime, overview, genres) ─────────────────────────
@@ -142,15 +138,13 @@ for (const detail of filmDetails) {
       popularity: detail.popularity,
     })
     .where(eq(schema.films.id, detail.id))
-    .run()
 
   // Insert genres
   for (const g of detail.genres) {
-    await db.insert(schema.genres).values({ id: g.id, name: g.name }).onConflictDoNothing().run()
+    await db.insert(schema.genres).values({ id: g.id, name: g.name }).onConflictDoNothing()
     await db.insert(schema.filmGenres)
       .values({ filmId: detail.id, genreId: g.id })
       .onConflictDoNothing()
-      .run()
   }
 }
 console.log(`✓ ${filmDetails.length} film details applied`)
@@ -182,7 +176,6 @@ for (let i = 0; i < filmIds.length; i++) {
         photoPath: director.profile_path ?? '',
       })
       .onConflictDoNothing()
-      .run()
 
     await db.insert(schema.filmCredits)
       .values({
@@ -192,7 +185,6 @@ for (let i = 0; i < filmIds.length; i++) {
         order: 0,
       })
       .onConflictDoNothing()
-      .run()
 
     personIdsToFetch.add(director.id)
   }
@@ -208,7 +200,6 @@ for (let i = 0; i < filmIds.length; i++) {
         photoPath: actor.profile_path ?? '',
       })
       .onConflictDoNothing()
-      .run()
 
     await db.insert(schema.filmCredits)
       .values({
@@ -219,7 +210,6 @@ for (let i = 0; i < filmIds.length; i++) {
         order: actor.order,
       })
       .onConflictDoNothing()
-      .run()
 
     personIdsToFetch.add(actor.id)
   }
@@ -254,7 +244,6 @@ for (const person of personDetails) {
       photoPath: person.profile_path ?? '',
     })
     .where(eq(schema.persons.id, person.id))
-    .run()
   personUpdateCount++
 }
 console.log(`✓ ${personUpdateCount} person details updated`)
@@ -283,7 +272,6 @@ for (const { filmId, similar } of similarResults) {
       await db.insert(schema.similarFilms)
         .values({ filmId, similarFilmId: s.id })
         .onConflictDoNothing()
-        .run()
       similarCount++
     }
   }
@@ -305,7 +293,6 @@ const [currentUser] = await db
   })
   .onConflictDoNothing()
   .returning()
-  .all()
 
 // Also create some community users for activity feed
 const communityUsers = [
@@ -315,17 +302,17 @@ const communityUsers = [
   { username: 'arthouse_fan', displayName: 'Arthouse Fan' },
 ]
 for (const u of communityUsers) {
-  await db.insert(schema.users).values({ ...u, avatar: '', bio: '' }).onConflictDoNothing().run()
+  await db.insert(schema.users).values({ ...u, avatar: '', bio: '' }).onConflictDoNothing()
 }
 
 // Get userId (handle case where user already existed)
 let userId = currentUser?.id
 if (!userId) {
-  const existingUser = await db.select().from(schema.users).where(eq(schema.users.username, 'currentuser')).get()
+  const [existingUser] = await db.select().from(schema.users).where(eq(schema.users.username, 'currentuser'))
   userId = existingUser!.id
 }
 
-const allFilmsInDb = await db.select({ id: schema.films.id, avgRating: schema.films.avgRating }).from(schema.films).all()
+const allFilmsInDb = await db.select({ id: schema.films.id, avgRating: schema.films.avgRating }).from(schema.films)
 const sortedByRating = [...allFilmsInDb].sort((a, b) => b.avgRating - a.avgRating)
 
 // Favorite films (top 4 by rating)
@@ -334,7 +321,6 @@ for (let i = 0; i < favFilms.length; i++) {
   await db.insert(schema.favoriteFilms)
     .values({ userId, filmId: favFilms[i]!.id, position: i })
     .onConflictDoNothing()
-    .run()
 }
 
 // Mark films as watched/liked (top 20 by rating)
@@ -351,7 +337,6 @@ for (const film of watchedFilms) {
       userRating: Math.round(film.avgRating * 2) / 2, // round to nearest 0.5
     })
     .onConflictDoNothing()
-    .run()
 }
 
 // Watchlist (films 20-26 by rating)
@@ -366,7 +351,6 @@ for (const film of watchlistFilms) {
       inWatchlist: true,
     })
     .onConflictDoNothing()
-    .run()
 }
 
 // Diary entries (6 entries, most recent watched films)
@@ -387,7 +371,6 @@ for (let i = 0; i < diaryFilms.length; i++) {
       rewatch: i === 4, // 5th entry is a rewatch
     })
     .onConflictDoNothing()
-    .run()
 }
 
 // Activity for currentuser
@@ -402,7 +385,6 @@ for (let i = 0; i < Math.min(6, watchedFilms.length); i++) {
       createdAt: diaryDates[i] ?? new Date().toISOString(),
     })
     .onConflictDoNothing()
-    .run()
 }
 
 // Activity for community users (for home feed)
@@ -410,7 +392,6 @@ const communityUserRows = await db
   .select()
   .from(schema.users)
   .where(inArray(schema.users.username, communityUsers.map(u => u.username)))
-  .all()
 
 const activityTypes: Array<'watched' | 'liked' | 'reviewed' | 'listed'> = ['watched', 'liked', 'reviewed', 'listed']
 const feedDates = ['2026-02-20', '2026-02-19', '2026-02-18', '2026-02-17', '2026-02-16']
@@ -428,7 +409,6 @@ for (let i = 0; i < communityUserRows.length; i++) {
       createdAt: feedDates[i] ?? new Date().toISOString(),
     })
     .onConflictDoNothing()
-    .run()
 }
 
 // 3 public lists
@@ -464,14 +444,12 @@ for (const listDef of listData) {
       likes: listDef.likes,
     })
     .returning()
-    .all()
 
   if (!list) continue
   for (let pos = 0; pos < listDef.films.length; pos++) {
     await db.insert(schema.listFilms)
       .values({ listId: list.id, filmId: listDef.films[pos]!, position: pos })
       .onConflictDoNothing()
-      .run()
   }
 }
 
@@ -488,7 +466,6 @@ for (let ci = 0; ci < communityUserRows.length; ci++) {
       likes: 30 + ci * 10,
     })
     .returning()
-    .all()
 
   if (!list) continue
   const listFilmSlice = sortedByRating.slice(10 + ci * 4, 10 + ci * 4 + 4).map(f => f.id)
@@ -496,9 +473,10 @@ for (let ci = 0; ci < communityUserRows.length; ci++) {
     await db.insert(schema.listFilms)
       .values({ listId: list.id, filmId: listFilmSlice[pos]!, position: pos })
       .onConflictDoNothing()
-      .run()
   }
 }
 
 console.log('✓ User data seeded')
 console.log('\n🎬 Seed complete! Run `pnpm run dev` to start the app.')
+
+await client.end()

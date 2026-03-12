@@ -11,7 +11,6 @@ export default defineEventHandler(async (event) => {
     .select()
     .from(userFilmInteractions)
     .where(eq(userFilmInteractions.userId, userId))
-    .all()
 
   return { interactions }
 })

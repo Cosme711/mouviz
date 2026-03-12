@@ -14,12 +14,11 @@ export default defineEventHandler(async (event) => {
       eq(userFilmInteractions.userId, userId),
       eq(userFilmInteractions.inWatchlist, true),
     ))
-    .all()
 
   const filmIds = watchlistRows.map(r => r.filmId)
   if (filmIds.length === 0) return { films: [] }
 
-  const filmRows = await db.select().from(films).where(inArray(films.id, filmIds)).all()
+  const filmRows = await db.select().from(films).where(inArray(films.id, filmIds))
 
   return {
     films: filmRows.map(f => ({

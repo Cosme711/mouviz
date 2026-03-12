@@ -21,7 +21,6 @@ export default defineEventHandler(async (event) => {
       likes: 0,
     })
     .returning()
-    .all()
 
   return { ok: true, list }
 })

@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   const db = useDB()
   const username = getRouterParam(event, 'username')
 
-  const user = await db.select().from(users).where(eq(users.username, username!)).get()
+  const [user] = await db.select().from(users).where(eq(users.username, username!))
   if (!user) {
     throw createError({ statusCode: 404, message: 'User not found' })
   }
@@ -29,21 +29,18 @@ export default defineEventHandler(async (event) => {
       eq(userFilmInteractions.userId, user.id),
       eq(userFilmInteractions.watched, true),
     ))
-    .all()
   const watchedCount = watchedRows.length
 
   const followingRows = await db
     .select({ id: userFollows.followingId })
     .from(userFollows)
     .where(eq(userFollows.followerId, user.id))
-    .all()
   const followingCount = followingRows.length
 
   const followersRows = await db
     .select({ id: userFollows.followerId })
     .from(userFollows)
     .where(eq(userFollows.followingId, user.id))
-    .all()
   const followersCount = followersRows.length
 
   // Favorite films
@@ -52,11 +49,10 @@ export default defineEventHandler(async (event) => {
     .from(favoriteFilms)
     .where(eq(favoriteFilms.userId, user.id))
     .orderBy(asc(favoriteFilms.position))
-    .all()
 
   const favFilmIds = favRows.map(r => r.filmId)
   const favFilms = favFilmIds.length > 0
-    ? await db.select().from(films).where(inArray(films.id, favFilmIds)).all()
+    ? await db.select().from(films).where(inArray(films.id, favFilmIds))
     : []
   const favFilmMap = new Map(favFilms.map(f => [f.id, f]))
 
@@ -81,11 +77,10 @@ export default defineEventHandler(async (event) => {
     .where(eq(activity.userId, user.id))
     .orderBy(desc(activity.createdAt))
     .limit(10)
-    .all()
 
   const actFilmIds = [...new Set(activityRows.map(r => r.act.filmId))]
   const actFilms = actFilmIds.length > 0
-    ? await db.select().from(films).where(inArray(films.id, actFilmIds)).all()
+    ? await db.select().from(films).where(inArray(films.id, actFilmIds))
     : []
   const actFilmMap = new Map(actFilms.map(f => [f.id, f]))
 
@@ -119,7 +114,6 @@ export default defineEventHandler(async (event) => {
     .from(lists)
     .where(and(eq(lists.userId, user.id), eq(lists.isPublic, true)))
     .orderBy(desc(lists.likes))
-    .all()
 
   const listIds = listRows.map(l => l.id)
   const listFilmRows = listIds.length > 0
@@ -127,12 +121,11 @@ export default defineEventHandler(async (event) => {
         .from(listFilms)
         .where(inArray(listFilms.listId, listIds))
         .orderBy(asc(listFilms.position))
-        .all()
     : []
 
   const listFilmIdSet = [...new Set(listFilmRows.map(r => r.filmId))]
   const listFilmRows2 = listFilmIdSet.length > 0
-    ? await db.select().from(films).where(inArray(films.id, listFilmIdSet)).all()
+    ? await db.select().from(films).where(inArray(films.id, listFilmIdSet))
     : []
   const listFilmMap = new Map(listFilmRows2.map(f => [f.id, f]))
 

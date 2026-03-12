@@ -1,60 +1,54 @@
 {
-  "version": "6",
-  "dialect": "sqlite",
-  "id": "0cae4928-439b-402e-8ce8-88f500af63a9",
+  "id": "8b3d8eef-0c04-4dc1-96e8-56d5e4fc38be",
   "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
   "tables": {
-    "activity": {
+    "public.activity": {
       "name": "activity",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
+          "notNull": true
         },
         "user_id": {
           "name": "user_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "film_id": {
           "name": "film_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "type": {
           "name": "type",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "rating": {
           "name": "rating",
           "type": "real",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         },
         "review_id": {
           "name": "review_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         }
       },
       "indexes": {},
@@ -101,68 +95,63 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "diary_entries": {
+    "public.diary_entries": {
       "name": "diary_entries",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
+          "notNull": true
         },
         "user_id": {
           "name": "user_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "film_id": {
           "name": "film_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "watched_at": {
           "name": "watched_at",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "rating": {
           "name": "rating",
           "type": "real",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         },
         "liked": {
           "name": "liked",
-          "type": "integer",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": false
         },
         "rewatch": {
           "name": "rewatch",
-          "type": "integer",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": false
         },
         "review": {
           "name": "review",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         }
       },
       "indexes": {},
@@ -196,31 +185,31 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "favorite_films": {
+    "public.favorite_films": {
       "name": "favorite_films",
+      "schema": "",
       "columns": {
         "user_id": {
           "name": "user_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "film_id": {
           "name": "film_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "position": {
           "name": "position",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         }
       },
       "indexes": {},
@@ -254,53 +243,51 @@
       },
       "compositePrimaryKeys": {
         "favorite_films_user_id_film_id_pk": {
+          "name": "favorite_films_user_id_film_id_pk",
           "columns": [
             "user_id",
             "film_id"
-          ],
-          "name": "favorite_films_user_id_film_id_pk"
+          ]
         }
       },
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "film_credits": {
+    "public.film_credits": {
       "name": "film_credits",
+      "schema": "",
       "columns": {
         "film_id": {
           "name": "film_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "person_id": {
           "name": "person_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "role": {
           "name": "role",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "character": {
           "name": "character",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         },
         "order": {
           "name": "order",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": 0
         }
       },
@@ -335,33 +322,34 @@
       },
       "compositePrimaryKeys": {
         "film_credits_film_id_person_id_role_pk": {
+          "name": "film_credits_film_id_person_id_role_pk",
           "columns": [
             "film_id",
             "person_id",
             "role"
-          ],
-          "name": "film_credits_film_id_person_id_role_pk"
+          ]
         }
       },
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "film_genres": {
+    "public.film_genres": {
       "name": "film_genres",
+      "schema": "",
       "columns": {
         "film_id": {
           "name": "film_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "genre_id": {
           "name": "genre_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         }
       },
       "indexes": {},
@@ -395,46 +383,45 @@
       },
       "compositePrimaryKeys": {
         "film_genres_film_id_genre_id_pk": {
+          "name": "film_genres_film_id_genre_id_pk",
           "columns": [
             "film_id",
             "genre_id"
-          ],
-          "name": "film_genres_film_id_genre_id_pk"
+          ]
         }
       },
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "films": {
+    "public.films": {
       "name": "films",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
           "type": "integer",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "title": {
           "name": "title",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "year": {
           "name": "year",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "duration": {
           "name": "duration",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": 0
         },
         "synopsis": {
@@ -442,7 +429,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": "''"
         },
         "poster_path": {
@@ -450,7 +436,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": "''"
         },
         "backdrop_path": {
@@ -458,7 +443,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": "''"
         },
         "avg_rating": {
@@ -466,7 +450,6 @@
           "type": "real",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": 0
         },
         "popularity": {
@@ -474,7 +457,6 @@
           "type": "real",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": 0
         }
       },
@@ -482,55 +464,56 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "genres": {
+    "public.genres": {
       "name": "genres",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
           "type": "integer",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "name": {
           "name": "name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "list_films": {
+    "public.list_films": {
       "name": "list_films",
+      "schema": "",
       "columns": {
         "list_id": {
           "name": "list_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "film_id": {
           "name": "film_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "position": {
           "name": "position",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": 0
         }
       },
@@ -565,54 +548,52 @@
       },
       "compositePrimaryKeys": {
         "list_films_list_id_film_id_pk": {
+          "name": "list_films_list_id_film_id_pk",
           "columns": [
             "list_id",
             "film_id"
-          ],
-          "name": "list_films_list_id_film_id_pk"
+          ]
         }
       },
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "lists": {
+    "public.lists": {
       "name": "lists",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
+          "notNull": true
         },
         "user_id": {
           "name": "user_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "title": {
           "name": "title",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "description": {
           "name": "description",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": "''"
         },
         "is_public": {
           "name": "is_public",
-          "type": "integer",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": true
         },
         "likes": {
@@ -620,7 +601,6 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": 0
         }
       },
@@ -642,53 +622,50 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "persons": {
+    "public.persons": {
       "name": "persons",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
           "type": "integer",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "name": {
           "name": "name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "biography": {
           "name": "biography",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": "''"
         },
         "birth_year": {
           "name": "birth_year",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         },
         "nationality": {
           "name": "nationality",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         },
         "photo_path": {
           "name": "photo_path",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": "''"
         }
       },
@@ -696,60 +673,56 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "reviews": {
+    "public.reviews": {
       "name": "reviews",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
+          "notNull": true
         },
         "film_id": {
           "name": "film_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "user_id": {
           "name": "user_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "rating": {
           "name": "rating",
           "type": "real",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "text": {
           "name": "text",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "likes": {
           "name": "likes",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": 0
         },
         "created_at": {
           "name": "created_at",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         }
       },
       "indexes": {},
@@ -783,24 +756,25 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "similar_films": {
+    "public.similar_films": {
       "name": "similar_films",
+      "schema": "",
       "columns": {
         "film_id": {
           "name": "film_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "similar_film_id": {
           "name": "similar_film_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         }
       },
       "indexes": {},
@@ -834,63 +808,60 @@
       },
       "compositePrimaryKeys": {
         "similar_films_film_id_similar_film_id_pk": {
+          "name": "similar_films_film_id_similar_film_id_pk",
           "columns": [
             "film_id",
             "similar_film_id"
-          ],
-          "name": "similar_films_film_id_similar_film_id_pk"
+          ]
         }
       },
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "user_film_interactions": {
+    "public.user_film_interactions": {
       "name": "user_film_interactions",
+      "schema": "",
       "columns": {
         "user_id": {
           "name": "user_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "film_id": {
           "name": "film_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "watched": {
           "name": "watched",
-          "type": "integer",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": false
         },
         "liked": {
           "name": "liked",
-          "type": "integer",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": false
         },
         "in_watchlist": {
           "name": "in_watchlist",
-          "type": "integer",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": false
         },
         "user_rating": {
           "name": "user_rating",
           "type": "real",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         }
       },
       "indexes": {},
@@ -924,32 +895,33 @@
       },
       "compositePrimaryKeys": {
         "user_film_interactions_user_id_film_id_pk": {
+          "name": "user_film_interactions_user_id_film_id_pk",
           "columns": [
             "user_id",
             "film_id"
-          ],
-          "name": "user_film_interactions_user_id_film_id_pk"
+          ]
         }
       },
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "user_follows": {
+    "public.user_follows": {
       "name": "user_follows",
+      "schema": "",
       "columns": {
         "follower_id": {
           "name": "follower_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "following_id": {
           "name": "following_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         }
       },
       "indexes": {},
@@ -983,46 +955,45 @@
       },
       "compositePrimaryKeys": {
         "user_follows_follower_id_following_id_pk": {
+          "name": "user_follows_follower_id_following_id_pk",
           "columns": [
             "follower_id",
             "following_id"
-          ],
-          "name": "user_follows_follower_id_following_id_pk"
+          ]
         }
       },
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     },
-    "users": {
+    "public.users": {
       "name": "users",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
+          "notNull": true
         },
         "username": {
           "name": "username",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "display_name": {
           "name": "display_name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "avatar": {
           "name": "avatar",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": "''"
         },
         "bio": {
@@ -1030,33 +1001,68 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
           "default": "''"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "google_id": {
+          "name": "google_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'2026-03-12T19:52:01.797Z'"
         }
       },
-      "indexes": {
-        "users_username_unique": {
-          "name": "users_username_unique",
-          "columns": [
-            "username"
-          ],
-          "isUnique": true
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
+      "uniqueConstraints": {
+        "users_username_unique": {
+          "name": "users_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        },
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        },
+        "users_google_id_unique": {
+          "name": "users_google_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "google_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
-  "views": {},
   "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
   "_meta": {
+    "columns": {},
     "schemas": {},
-    "tables": {},
-    "columns": {}
-  },
-  "internal": {
-    "indexes": {}
+    "tables": {}
   }
 }

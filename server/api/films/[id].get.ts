@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Invalid film ID' })
   }
 
-  const film = await db.select().from(films).where(eq(films.id, filmId)).get()
+  const [film] = await db.select().from(films).where(eq(films.id, filmId))
   if (!film) {
     throw createError({ statusCode: 404, message: 'Film not found' })
   }
@@ -31,16 +31,14 @@ export default defineEventHandler(async (event) => {
     .from(filmGenres)
     .innerJoin(genres, eq(filmGenres.genreId, genres.id))
     .where(eq(filmGenres.filmId, filmId))
-    .all()
   const genreList = filmGenreRows.map(g => g.name)
 
   // Director
-  const directorRow = await db
+  const [directorRow] = await db
     .select({ name: persons.name })
     .from(filmCredits)
     .innerJoin(persons, eq(filmCredits.personId, persons.id))
     .where(and(eq(filmCredits.filmId, filmId), eq(filmCredits.role, 'director')))
-    .get()
 
   // Cast
   const castRows = await db
@@ -55,24 +53,21 @@ export default defineEventHandler(async (event) => {
     .innerJoin(persons, eq(filmCredits.personId, persons.id))
     .where(and(eq(filmCredits.filmId, filmId), eq(filmCredits.role, 'actor')))
     .orderBy(filmCredits.order)
-    .all()
 
   // User interaction
-  const interaction = await db
+  const [interaction] = await db
     .select()
     .from(userFilmInteractions)
     .where(and(
       eq(userFilmInteractions.userId, CURRENT_USER_ID),
       eq(userFilmInteractions.filmId, filmId),
     ))
-    .get()
 
   // Review count
   const reviewRows = await db
     .select({ id: reviews.id })
     .from(reviews)
     .where(eq(reviews.filmId, filmId))
-    .all()
 
   return {
     id: film.id,

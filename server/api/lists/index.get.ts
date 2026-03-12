@@ -10,7 +10,6 @@ export default defineEventHandler(async (_event) => {
     .innerJoin(users, eq(lists.userId, users.id))
     .where(eq(lists.isPublic, true))
     .orderBy(desc(lists.likes))
-    .all()
 
   if (listRows.length === 0) return { lists: [] }
 
@@ -22,11 +21,10 @@ export default defineEventHandler(async (_event) => {
     .from(listFilms)
     .where(inArray(listFilms.listId, listIds))
     .orderBy(asc(listFilms.position))
-    .all()
 
   const filmIds = [...new Set(listFilmRows.map(r => r.filmId))]
   const filmRows = filmIds.length > 0
-    ? await db.select().from(films).where(inArray(films.id, filmIds)).all()
+    ? await db.select().from(films).where(inArray(films.id, filmIds))
     : []
   const filmMap = new Map(filmRows.map(f => [f.id, f]))
 

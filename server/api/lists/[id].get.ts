@@ -7,12 +7,11 @@ export default defineEventHandler(async (event) => {
   const db = useDB()
   const listId = Number(getRouterParam(event, 'id'))
 
-  const listRow = await db
+  const [listRow] = await db
     .select({ list: lists, user: users })
     .from(lists)
     .innerJoin(users, eq(lists.userId, users.id))
     .where(eq(lists.id, listId))
-    .get()
 
   if (!listRow) {
     throw createError({ statusCode: 404, message: 'Liste introuvable' })
@@ -23,11 +22,10 @@ export default defineEventHandler(async (event) => {
     .from(listFilms)
     .where(eq(listFilms.listId, listId))
     .orderBy(asc(listFilms.position))
-    .all()
 
   const filmIds = listFilmRows.map(r => r.filmId)
   const filmRows = filmIds.length > 0
-    ? await db.select().from(films).where(inArray(films.id, filmIds)).all()
+    ? await db.select().from(films).where(inArray(films.id, filmIds))
     : []
   const filmMap = new Map(filmRows.map(f => [f.id, f]))
 
@@ -37,7 +35,6 @@ export default defineEventHandler(async (event) => {
           eq(userFilmInteractions.userId, CURRENT_USER_ID),
           inArray(userFilmInteractions.filmId, filmIds),
         ))
-        .all()
     : []
   const interactionMap = new Map(interactions.map(i => [i.filmId, i]))
 

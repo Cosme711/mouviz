@@ -13,12 +13,11 @@ export default defineEventHandler(async (_event) => {
     .innerJoin(users, eq(activity.userId, users.id))
     .orderBy(desc(activity.createdAt))
     .limit(20)
-    .all()
 
   if (activityRows.length === 0) return { activities: [] }
 
   const filmIds = [...new Set(activityRows.map(r => r.act.filmId))]
-  const filmRows = await db.select().from(films).where(inArray(films.id, filmIds)).all()
+  const filmRows = await db.select().from(films).where(inArray(films.id, filmIds))
   const filmMap = new Map(filmRows.map(f => [f.id, f]))
 
   return {

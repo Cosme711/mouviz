@@ -11,19 +11,17 @@ export default defineOAuthGoogleEventHandler({
     const avatar = googleUser.picture ? String(googleUser.picture) : ''
 
     // Try to find existing user by googleId
-    let existing = await db
+    let [existing] = await db
       .select()
       .from(users)
       .where(eq(users.googleId, googleId))
-      .get()
 
     // Fall back to email match (for existing seeded users)
     if (!existing && email) {
-      existing = await db
+      ;[existing] = await db
         .select()
         .from(users)
         .where(eq(users.email, email))
-        .get()
     }
 
     if (existing) {
@@ -36,7 +34,6 @@ export default defineOAuthGoogleEventHandler({
             email: existing.email ?? email ?? undefined,
           })
           .where(eq(users.id, existing.id))
-          .run()
       }
       await setUserSession(event, {
         user: {
@@ -56,7 +53,7 @@ export default defineOAuthGoogleEventHandler({
       // Ensure uniqueness by appending a counter if needed
       let username = baseUsername
       let counter = 1
-      while (await db.select().from(users).where(eq(users.username, username)).get()) {
+      while ((await db.select().from(users).where(eq(users.username, username))).length > 0) {
         username = `${baseUsername}${counter++}`
       }
 
@@ -72,7 +69,6 @@ export default defineOAuthGoogleEventHandler({
           createdAt: new Date().toISOString(),
         })
         .returning()
-        .all()
 
       if (!newUser) {
         throw createError({ statusCode: 500, message: 'Erreur lors de la création du compte' })

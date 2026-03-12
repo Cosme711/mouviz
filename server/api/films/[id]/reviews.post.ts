@@ -26,7 +26,6 @@ export default defineEventHandler(async (event) => {
       createdAt: now,
     })
     .returning()
-    .all()
 
   await db.insert(activity)
     .values({
@@ -37,7 +36,6 @@ export default defineEventHandler(async (event) => {
       reviewId: review!.id,
       createdAt: now,
     })
-    .run()
 
   // Mark as watched when reviewing
   await db.insert(userFilmInteractions)
@@ -53,7 +51,6 @@ export default defineEventHandler(async (event) => {
       target: [userFilmInteractions.userId, userFilmInteractions.filmId],
       set: { watched: true, userRating: Number(body.rating) },
     })
-    .run()
 
   return { ok: true, reviewId: review!.id }
 })

@@ -11,7 +11,6 @@ export default defineEventHandler(async (event) => {
     .select({ similarFilmId: similarFilms.similarFilmId })
     .from(similarFilms)
     .where(eq(similarFilms.filmId, filmId))
-    .all()
 
   if (similarRows.length === 0) {
     return { films: [] }
@@ -22,7 +21,6 @@ export default defineEventHandler(async (event) => {
     .select()
     .from(films)
     .where(inArray(films.id, similarFilmIds))
-    .all()
 
   const interactions = await db
     .select()
@@ -31,7 +29,6 @@ export default defineEventHandler(async (event) => {
       eq(userFilmInteractions.userId, CURRENT_USER_ID),
       inArray(userFilmInteractions.filmId, similarFilmIds),
     ))
-    .all()
   const interactionMap = new Map(interactions.map(i => [i.filmId, i]))
 
   return {

@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Invalid person ID' })
   }
 
-  const person = await db.select().from(persons).where(eq(persons.id, personId)).get()
+  const [person] = await db.select().from(persons).where(eq(persons.id, personId))
   if (!person) {
     throw createError({ statusCode: 404, message: 'Person not found' })
   }
@@ -19,14 +19,13 @@ export default defineEventHandler(async (event) => {
     .select({ role: filmCredits.role, filmId: filmCredits.filmId })
     .from(filmCredits)
     .where(eq(filmCredits.personId, personId))
-    .all()
 
   const filmIds = [...new Set(creditRows.map(c => c.filmId))]
   const isDirector = creditRows.some(c => c.role === 'director')
 
   // Stats
   const personFilms = filmIds.length > 0
-    ? await db.select({ rating: films.avgRating }).from(films).where(inArray(films.id, filmIds)).all()
+    ? await db.select({ rating: films.avgRating }).from(films).where(inArray(films.id, filmIds))
     : []
 
   const averageRating = personFilms.length > 0
@@ -40,7 +39,7 @@ export default defineEventHandler(async (event) => {
         .where(inArray(films.id, filmIds))
         .orderBy(films.avgRating)
         .limit(4)
-        .all()).map(f => f.title)
+      ).map(f => f.title)
     : []
 
   return {

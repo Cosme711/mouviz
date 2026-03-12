@@ -12,12 +12,11 @@ export default defineEventHandler(async (event) => {
     .from(diaryEntries)
     .where(eq(diaryEntries.userId, userId))
     .orderBy(desc(diaryEntries.watchedAt))
-    .all()
 
   if (entries.length === 0) return { entries: [] }
 
   const filmIds = [...new Set(entries.map(e => e.filmId))]
-  const filmRows = await db.select().from(films).where(inArray(films.id, filmIds)).all()
+  const filmRows = await db.select().from(films).where(inArray(films.id, filmIds))
   const filmMap = new Map(filmRows.map(f => [f.id, f]))
 
   return {

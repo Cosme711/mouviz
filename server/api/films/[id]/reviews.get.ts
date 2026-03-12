@@ -14,7 +14,6 @@ export default defineEventHandler(async (event) => {
     .innerJoin(users, eq(reviews.userId, users.id))
     .where(eq(reviews.filmId, filmId))
     .orderBy(desc(reviews.createdAt))
-    .all()
 
   return {
     reviews: reviewRows.map(r => ({

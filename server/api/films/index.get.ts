@@ -1,4 +1,4 @@
-import { eq, and, like, gte, desc, asc, inArray } from 'drizzle-orm'
+import { eq, and, ilike, gte, desc, asc, inArray } from 'drizzle-orm'
 import {
   films,
   genres,
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
   const filterWatchlist = query.watchlist === '1'
 
   // Get all genres for the response
-  const allGenres = await db.select({ name: genres.name }).from(genres).orderBy(asc(genres.name)).all()
+  const allGenres = await db.select({ name: genres.name }).from(genres).orderBy(asc(genres.name))
   const genreNames = allGenres.map(g => g.name)
 
   // Determine sort order
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
   const conditions = []
 
   if (search) {
-    conditions.push(like(films.title, `%${search}%`))
+    conditions.push(ilike(films.title, `%${search}%`))
   }
   if (minRating > 0) {
     conditions.push(gte(films.avgRating, minRating))
@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
 
   // Genre filter via subquery
   if (genreName) {
-    const genreRow = await db.select({ id: genres.id }).from(genres).where(eq(genres.name, genreName)).get()
+    const [genreRow] = await db.select({ id: genres.id }).from(genres).where(eq(genres.name, genreName))
     if (!genreRow) {
       return { films: [], total: 0, genres: genreNames }
     }
@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
       .select({ filmId: filmGenres.filmId })
       .from(filmGenres)
       .where(eq(filmGenres.genreId, genreRow.id))
-      .all()).map(r => r.filmId)
+    ).map(r => r.filmId)
     if (filmIdsWithGenre.length === 0) {
       return { films: [], total: 0, genres: genreNames }
     }
@@ -64,8 +64,8 @@ export default defineEventHandler(async (event) => {
   // Status filters (need interactions) — done in JS after initial fetch
   // Fetch all matching films (we'll filter by status in JS, then paginate)
   let allMatchingFilms = conditions.length > 0
-    ? await db.select().from(films).where(and(...conditions)).orderBy(orderBy).all()
-    : await db.select().from(films).orderBy(orderBy).all()
+    ? await db.select().from(films).where(and(...conditions)).orderBy(orderBy)
+    : await db.select().from(films).orderBy(orderBy)
 
   // Get interactions for status filters
   const needsStatusFilter = filterWatched || filterNotWatched || filterLiked || filterWatchlist
@@ -77,7 +77,6 @@ export default defineEventHandler(async (event) => {
             eq(userFilmInteractions.userId, CURRENT_USER_ID),
             inArray(userFilmInteractions.filmId, filmIds),
           ))
-          .all()
       : []
     const interactionMap = new Map(interactions.map(i => [i.filmId, i]))
 
@@ -101,7 +100,6 @@ export default defineEventHandler(async (event) => {
         .from(filmGenres)
         .innerJoin(genres, eq(filmGenres.genreId, genres.id))
         .where(inArray(filmGenres.filmId, pageFilmIds))
-        .all()
     : []
 
   // Get interactions for page films
@@ -111,7 +109,6 @@ export default defineEventHandler(async (event) => {
           eq(userFilmInteractions.userId, CURRENT_USER_ID),
           inArray(userFilmInteractions.filmId, pageFilmIds),
         ))
-        .all()
     : []
   const interactionMap = new Map(interactions.map(i => [i.filmId, i]))
 
