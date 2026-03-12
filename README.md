@@ -1,7 +1,8 @@
 # MOUVIZ
 
-Plateforme de suivi et découverte de films - Stack Nuxt 4 + SQLite + Drizzle.
+Plateforme de suivi et découverte de films - Letterboxd like
 
+Stack Nuxt 4 + Supabase (PostgreSQL) + Drizzle + Google Auth + Seeding TMDB
 
 ## Installation
 

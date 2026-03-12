@@ -11,7 +11,7 @@
 | Composants | shadcn-nuxt + radix-vue | manuel, pas de module auto |
 | Icônes | lucide-vue-next | `^0.575` |
 | ORM | Drizzle ORM | `^0.45` |
-| SQLite driver | better-sqlite3 | `^12.6` (module natif, nécessite node-gyp) |
+| PostgreSQL driver | postgres (postgres-js) | `^3.4.8` |
 | Package manager | pnpm | — |
 
 ## Structure des dossiers
@@ -47,7 +47,6 @@ mouviz/
 │       ├── db.ts               # useDB() — singleton Drizzle, auto-importé Nitro
 │       └── tmdb.ts             # tmdbImage + tmdbFetch throttlé
 ├── scripts/seed.ts             # Peuplement DB depuis TMDB
-├── db/mouviz.db                # SQLite (gitignorée)
 ├── drizzle.config.ts
 └── nuxt.config.ts
 ```
@@ -74,7 +73,7 @@ Nitro auto-importe `server/utils/`. Toutes les routes peuvent appeler `useDB()` 
 
 ### Utilisateur courant
 
-L'authentification n'est pas implémentée. Toutes les routes utilisent `CURRENT_USER_ID = 1` (username: `currentuser`). Le profil accessible via `/profile/currentuser`.
+L'authentification est implémentée via Google OAuth (`nuxt-auth-utils`). Les routes protégées utilisent `getUserSession(event)` et retournent 401 si non authentifié. Certaines routes publiques (films, persons) se basent encore sur `CURRENT_USER_ID = 1` pour les interactions par défaut. Le profil seed est accessible via `/profile/currentuser`.
 
 ### TypeScript — `noUncheckedIndexedAccess`
 
@@ -90,13 +89,13 @@ const first = array[0]?.name
 const first = array[0]!.name  // si on sait que l'index existe
 ```
 
-### better-sqlite3 — requêtes synchrones
+### postgres-js — requêtes asynchrones
 
-Drizzle sur better-sqlite3 utilise des requêtes **synchrones**. Les méthodes sont `.all()`, `.get()`, `.run()` (pas de `await`).
+Drizzle sur postgres-js utilise des requêtes **asynchrones**. Toujours utiliser `await`.
 
 ```typescript
-const film = db.select().from(films).where(eq(films.id, id)).get()  // sync
-const all = db.select().from(films).all()  // sync
+const film = await db.select().from(films).where(eq(films.id, id))  // async
+const all = await db.select().from(films)  // async
 ```
 
 ## Design tokens

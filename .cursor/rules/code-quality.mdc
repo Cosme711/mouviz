@@ -31,7 +31,7 @@ alwaysApply: true
 
 ## Serveur (Nitro)
 - DB via `useDB()` depuis `server/utils/db.ts` — **Drizzle ORM uniquement**, pas de SQL brut
-- `better-sqlite3` est synchrone : utilise `.all()` / `.get()`, pas d'`await` sur les queries DB
+- `postgres-js` est **asynchrone** : toujours `await` les queries DB
 - TMDB via `tmdbFetch()` depuis `server/utils/tmdb.ts`
 
 ## Qualité générale
