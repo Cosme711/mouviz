@@ -13,7 +13,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "db:seed-letterboxd": "tsx scripts/seed-letterboxd.ts"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
