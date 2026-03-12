@@ -2,19 +2,20 @@
 
 ## Moteur et configuration
 
-**SQLite** via `better-sqlite3` (module natif Node.js — requêtes synchrones).
+**PostgreSQL** via **Supabase** avec le driver `postgres` (postgres-js — requêtes asynchrones).
 
-Fichier : `db/mouviz.db` (gitignorée, `db/.gitkeep` commité).
+Connexion via la variable d'environnement `DATABASE_URL` (chaîne de connexion Supabase).
 
 La connexion est un singleton initialisé dans `server/utils/db.ts` :
 
 ```typescript
 export function useDB() {
   if (!_db) {
-    const sqlite = new Database('db/mouviz.db')
-    sqlite.pragma('journal_mode = WAL')   // meilleures perfs en écriture concurrente
-    sqlite.pragma('foreign_keys = ON')    // intégrité référentielle active
-    _db = drizzle(sqlite, { schema })
+    const client = postgres(process.env.DATABASE_URL!, {
+      max: 1,
+      prepare: false, // requis pour Supabase Transaction Pooler (PgBouncer)
+    })
+    _db = drizzle(client, { schema })
   }
   return _db
 }
@@ -26,8 +27,8 @@ ORM : **Drizzle ORM** `0.45.x`. Source de vérité : `server/database/schema.ts`
 
 ```bash
 pnpm run db:generate  # génère les fichiers SQL dans server/database/migrations/
-pnpm run db:migrate   # applique les migrations (crée db/mouviz.db si absent)
-pnpm run db:seed      # peuple depuis TMDB API (~100 films, ~15s)
+pnpm run db:migrate   # applique les migrations sur la base Supabase
+pnpm run db:seed      # peuple depuis TMDB API (~600 req, ~2min)
 pnpm run db:studio    # ouvre Drizzle Studio sur http://local.drizzle.studio
 ```
 

@@ -2,7 +2,7 @@
 
 Toutes les routes sont sous `/api/`. Méthode HTTP encodée dans le nom du fichier Nitro (`.get.ts`, `.post.ts`).
 
-L'utilisateur courant est toujours `CURRENT_USER_ID = 1` (pas d'auth).
+L'authentification est gérée via Google OAuth (`nuxt-auth-utils`). Les routes protégées requièrent une session valide et retournent 401 sinon. Certaines routes publiques utilisent encore `CURRENT_USER_ID = 1` pour les données d'interaction par défaut.
 
 ---
 
