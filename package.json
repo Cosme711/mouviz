@@ -15,7 +15,8 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx scripts/seed.ts",
     "db:seed-letterboxd": "tsx scripts/seed-letterboxd.ts",
-    "db:seed-top500-list": "tsx scripts/seed-top500-list.ts"
+    "db:seed-top500-list": "tsx scripts/seed-top500-list.ts",
+    "db:update-top500": "tsx scripts/update-top500.ts"
   },
   "dependencies": {
     "@vueuse/core": "^14.2.1",
