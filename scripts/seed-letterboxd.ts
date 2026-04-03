@@ -103,6 +103,26 @@ interface TmdbSearchResult { results: TmdbFilm[] }
 
 interface LetterboxdFilm { slug: string; title: string; year: number | null }
 
+// ─── Cleanup: Delete all existing data ───────────────────────────────────────
+
+console.log('\n── Cleanup: Deleting all existing data')
+await db.delete(schema.listFilms)
+await db.delete(schema.lists)
+await db.delete(schema.favoriteFilms)
+await db.delete(schema.activity)
+await db.delete(schema.reviews)
+await db.delete(schema.diaryEntries)
+await db.delete(schema.userFilmInteractions)
+await db.delete(schema.userFollows)
+await db.delete(schema.similarFilms)
+await db.delete(schema.filmCredits)
+await db.delete(schema.filmGenres)
+await db.delete(schema.films)
+await db.delete(schema.persons)
+await db.delete(schema.genres)
+await db.delete(schema.users)
+console.log('✓ All tables cleared')
+
 // ─── Step 0: Scrape Letterboxd Top 500 ───────────────────────────────────────
 
 console.log('\n── Step 0: Scraping Letterboxd Top 500')
@@ -156,6 +176,33 @@ const letterboxdFilms = scraped.filter(f => {
 
 console.log(`✓ ${letterboxdFilms.length} unique films scraped from Letterboxd`)
 
+// ─── Step 0b: Fetch Letterboxd ratings ────────────────────────────────────────
+
+console.log('\n── Step 0b: Fetching Letterboxd ratings (this may take ~10 min)')
+const slugToRating = new Map<string, number>()
+let ratingsFetched = 0
+
+for (let i = 0; i < letterboxdFilms.length; i++) {
+  const film = letterboxdFilms[i]!
+  process.stdout.write(`  ${i + 1}/${letterboxdFilms.length} - ${film.slug}\r`)
+  try {
+    const html = await letterboxdFetch(`https://letterboxd.com/film/${film.slug}/`)
+    const ldMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)
+    if (ldMatch?.[1]) {
+      const raw = ldMatch[1].replace(/\/\*[\s\S]*?\*\//g, '').trim()
+      const ld = JSON.parse(raw) as { aggregateRating?: { ratingValue?: number } }
+      const rating = ld.aggregateRating?.ratingValue
+      if (typeof rating === 'number' && rating > 0) {
+        slugToRating.set(film.slug, rating)
+        ratingsFetched++
+      }
+    }
+  } catch (err) {
+    console.warn(`\n  ✗ Failed for "${film.slug}": ${err}`)
+  }
+}
+console.log(`✓ ${ratingsFetched}/${letterboxdFilms.length} Letterboxd ratings fetched`)
+
 // ─── Step 1: Genres ──────────────────────────────────────────────────────────
 
 console.log('\n── Step 1: Genres')
@@ -190,6 +237,18 @@ const searchFilm = async (film: LetterboxdFilm): Promise<TmdbFilm | null> => {
       return null
     }
 
+    // If we have a year, pick the result whose release year is closest (within 2 years)
+    if (film.year) {
+      let best = result.results[0]!
+      let bestDiff = Infinity
+      for (const r of result.results) {
+        if (!r.release_date) continue
+        const diff = Math.abs(parseInt(r.release_date.split('-')[0]!) - film.year)
+        if (diff < bestDiff) { bestDiff = diff; best = r }
+      }
+      if (bestDiff <= 2) return best
+    }
+
     return result.results[0]!
   } catch (err) {
     console.warn(`\n  ✗ Search failed for "${film.title}": ${err}`)
@@ -218,6 +277,17 @@ if (skipped.length > 0) {
   }
 }
 
+// Build TMDB ID → Letterboxd rating mapping
+const tmdbIdToLbRating = new Map<number, number>()
+for (let i = 0; i < letterboxdFilms.length; i++) {
+  const lbFilm = letterboxdFilms[i]!
+  const tmdbFilm = searchResults[i]
+  if (!tmdbFilm) continue
+  const rating = slugToRating.get(lbFilm.slug)
+  if (rating !== undefined) tmdbIdToLbRating.set(tmdbFilm.id, rating)
+}
+console.log(`  (${tmdbIdToLbRating.size} films matched with Letterboxd ratings)`)
+
 // ─── Step 3: Insert basic film data ──────────────────────────────────────────
 
 console.log('\n── Step 3: Insert basic film data')
@@ -232,7 +302,7 @@ for (const f of tmdbFilms) {
       synopsis: '',
       posterPath: f.poster_path ?? '',
       backdropPath: f.backdrop_path ?? '',
-      avgRating: Math.round((f.vote_average / 2) * 10) / 10,
+      avgRating: tmdbIdToLbRating.get(f.id) ?? Math.round((f.vote_average / 2) * 10) / 10,
       popularity: f.popularity,
     })
     .onConflictDoNothing()
@@ -259,7 +329,7 @@ for (const detail of filmDetails) {
       synopsis: detail.overview ?? '',
       posterPath: detail.poster_path ?? '',
       backdropPath: detail.backdrop_path ?? '',
-      avgRating: Math.round((detail.vote_average / 2) * 10) / 10,
+      avgRating: tmdbIdToLbRating.get(detail.id) ?? Math.round((detail.vote_average / 2) * 10) / 10,
       popularity: detail.popularity,
       country: detail.production_countries[0]?.iso_3166_1 ?? '',
     })
