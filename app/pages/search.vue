@@ -122,10 +122,12 @@
 </template>
 
 <script setup lang="ts">
+import { refDebounced } from '@vueuse/core'
 import { Search, SlidersHorizontal } from 'lucide-vue-next'
 import type { FilmCard } from '~/types'
 
 const query = ref('')
+const debouncedQuery = refDebounced(query, 300)
 const selectedGenre = ref<string | null>(null)
 const showFilters = ref(false)
 const sortBy = ref<'popularity' | 'rating' | 'year' | 'title'>('popularity')
@@ -142,7 +144,7 @@ const statusOptions = [
 const apiQuery = computed(() => ({
   limit: 200,
   sortBy: sortBy.value,
-  q: query.value || undefined,
+  q: debouncedQuery.value || undefined,
   genre: selectedGenre.value || undefined,
   minRating: minRating.value > 0 ? minRating.value : undefined,
   watched: selectedStatus.value.includes('watched') ? '1' : undefined,

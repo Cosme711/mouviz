@@ -1,6 +1,6 @@
 {
   "name": "Mouviz",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "private": true,
   "scripts": {
@@ -13,9 +13,12 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "db:seed-letterboxd": "tsx scripts/seed-letterboxd.ts",
+    "db:seed-top500-list": "tsx scripts/seed-top500-list.ts"
   },
   "dependencies": {
+    "@vueuse/core": "^14.2.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.3.1",

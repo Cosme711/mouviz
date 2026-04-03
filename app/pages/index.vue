@@ -104,7 +104,7 @@
 import type { FilmDetail, Activity, FilmCard } from '~/types'
 
 const { data: filmsData } = await useFetch('/api/films', {
-  query: { limit: 16, sortBy: 'popularity' },
+  query: { limit: 16, sortBy: 'rating' },
   default: () => ({ films: [] as FilmCard[], total: 0, genres: [] as string[] }),
 })
 

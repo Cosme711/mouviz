@@ -1,5 +1,5 @@
 import { eq, and } from 'drizzle-orm'
-import { userFilmInteractions, activity } from '../../database/schema'
+import { userFilmInteractions, activity, diaryEntries } from '../../database/schema'
 
 export default defineEventHandler(async (event) => {
   const session = await getUserSession(event)
@@ -54,6 +54,15 @@ export default defineEventHandler(async (event) => {
         type: field,
         createdAt: new Date().toISOString(),
       })
+  }
+
+  // Add diary entry when marking as watched
+  if (field === 'watched' && newValue) {
+    await db.insert(diaryEntries).values({
+      userId,
+      filmId,
+      watchedAt: new Date().toISOString().split('T')[0]!,
+    })
   }
 
   return { ok: true, [field]: newValue }
